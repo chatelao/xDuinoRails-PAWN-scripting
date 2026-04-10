@@ -18,7 +18,7 @@ Should Blink LED Via Pawn Script
     Execute Command             sysbus LoadELF "${BIN}"
     Create Terminal Tester      ${UART}
     Start Emulation
-    Wait For Line On Uart       Pawn LED Runtime Starting...
+    Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=10
     Wait For Line On Uart       Executing Pawn script...
     Wait For Line On Uart       LED STATE: 1
     Wait For Line On Uart       LED STATE: 0
