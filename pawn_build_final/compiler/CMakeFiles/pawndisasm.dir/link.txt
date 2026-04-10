@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/pawndisasm.dir/pawndisasm.c.o -o ../pawndisasm  -lpthread -lm

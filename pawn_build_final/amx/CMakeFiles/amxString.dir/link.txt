@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,amxString.so -o ../amxString.so CMakeFiles/amxString.dir/amxstring.c.o CMakeFiles/amxString.dir/amx.c.o CMakeFiles/amxString.dir/amxcons.c.o  -lcurses

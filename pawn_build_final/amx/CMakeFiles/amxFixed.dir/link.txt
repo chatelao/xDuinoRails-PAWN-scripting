@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,amxFixed.so -o ../amxFixed.so CMakeFiles/amxFixed.dir/amxfixed.c.o CMakeFiles/amxFixed.dir/amx.c.o  -lm

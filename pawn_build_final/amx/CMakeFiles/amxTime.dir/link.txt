@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,amxTime.so -o ../amxTime.so CMakeFiles/amxTime.dir/amxtime.c.o CMakeFiles/amxTime.dir/amx.c.o

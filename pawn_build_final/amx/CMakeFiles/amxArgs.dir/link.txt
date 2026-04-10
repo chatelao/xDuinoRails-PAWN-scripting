@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,amxArgs.so -o ../amxArgs.so CMakeFiles/amxArgs.dir/amxargs.c.o CMakeFiles/amxArgs.dir/amx.c.o

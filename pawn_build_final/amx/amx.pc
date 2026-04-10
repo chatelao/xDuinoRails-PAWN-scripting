@@ -1,0 +1,12 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${prefix}/
+
+Name: amx
+Description: PAWNAMX library
+URL: https://www.compuphase.com/pawn/pawn.htm
+Version: 4.0.0
+Requires:
+Libs: -L${libdir} -lamx
+Cflags: -I${includedir}/pawn -I${includedir}/pawn/linux

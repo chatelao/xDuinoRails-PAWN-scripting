@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/stategraph.dir/stategraph.c.o CMakeFiles/stategraph.dir/ezxml.c.o -o ../stategraph  -lpthread -lm

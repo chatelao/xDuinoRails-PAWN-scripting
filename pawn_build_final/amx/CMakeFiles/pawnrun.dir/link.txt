@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/pawnrun.dir/pawnrun.c.o CMakeFiles/pawnrun.dir/amx.c.o CMakeFiles/pawnrun.dir/amxcore.c.o CMakeFiles/pawnrun.dir/amxcons.c.o CMakeFiles/pawnrun.dir/amxpool.c.o CMakeFiles/pawnrun.dir/amxdbg.c.o CMakeFiles/pawnrun.dir/__/linux/binreloc.c.o CMakeFiles/pawnrun.dir/__/linux/installpath.c.o -o ../pawnrun  -ldl -lcurses
