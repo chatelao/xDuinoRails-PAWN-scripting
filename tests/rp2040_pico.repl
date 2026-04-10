@@ -18,10 +18,11 @@ uart0: UART.PL011 @ sysbus 0x40034000
 
 sysbus:
     init:
-        Tag <0x40008000 0x1000> "Clocks"
+        Tag <0x00000000 0x4000> "ROM" 0xFFFFFFFF
+        Tag <0x40008000 0x1000> "Clocks" 0xFFFFFFFF
         Tag <0x40014000 0x1000> "GPIO"
         Tag <0xd0000000 0x1000> "SIO"
-        Tag <0x4000c000 0x1000> "Resets"
+        Tag <0x4000c000 0x1000> "Resets" 0xFFFFFFFF
         Tag <0x40004000 0x1000> "SysInfo"
         Tag <0x40000000 0x1000> "SysCfg"
         Tag <0x40030000 0x1000> "UART1"
