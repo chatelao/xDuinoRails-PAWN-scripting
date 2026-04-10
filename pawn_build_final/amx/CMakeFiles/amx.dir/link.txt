@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,libamx.so.4 -o ../libamx.so.4.0.0 CMakeFiles/amx.dir/amx.c.o CMakeFiles/amx.dir/amxaux.c.o CMakeFiles/amx.dir/amxcore.c.o CMakeFiles/amx.dir/amxcons.c.o CMakeFiles/amx.dir/amxpool.c.o CMakeFiles/amx.dir/amxdbg.c.o CMakeFiles/amx.dir/amxstring.c.o CMakeFiles/amx.dir/__/linux/binreloc.c.o CMakeFiles/amx.dir/__/linux/installpath.c.o  -lcurses

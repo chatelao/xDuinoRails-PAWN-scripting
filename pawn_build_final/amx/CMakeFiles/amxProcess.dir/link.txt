@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,amxProcess.so -o ../amxProcess.so CMakeFiles/amxProcess.dir/amxprocess.c.o CMakeFiles/amxProcess.dir/amx.c.o  -ldl

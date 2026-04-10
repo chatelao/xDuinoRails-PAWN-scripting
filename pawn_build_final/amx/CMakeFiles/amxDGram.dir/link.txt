@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,amxDGram.so -o ../amxDGram.so CMakeFiles/amxDGram.dir/amxdgram.c.o CMakeFiles/amxDGram.dir/amx.c.o

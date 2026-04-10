@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/pawndbg.dir/pawndbg.c.o CMakeFiles/pawndbg.dir/amx.c.o CMakeFiles/pawndbg.dir/amxcore.c.o CMakeFiles/pawndbg.dir/amxcons.c.o CMakeFiles/pawndbg.dir/amxpool.c.o CMakeFiles/pawndbg.dir/amxdbg.c.o CMakeFiles/pawndbg.dir/__/linux/binreloc.c.o CMakeFiles/pawndbg.dir/__/linux/installpath.c.o -o ../pawndbg  -ldl -lcurses
