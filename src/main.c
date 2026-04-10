@@ -131,7 +131,7 @@ int main() {
         printf("No script found in FLASH.\n");
     }
 
-    printf("Press 'u' within 5 seconds to upload a new script via YMODEM...\n");
+    printf("Press 'u' within 5 seconds to upload a new script via YMODEM, or 's' to skip...\n");
 
     int64_t start_time = time_us_64();
     bool upload_mode = false;
@@ -139,6 +139,8 @@ int main() {
         int c = getchar_timeout_us(0);
         if (c == 'u') {
             upload_mode = true;
+            break;
+        } else if (c == 's') {
             break;
         }
         tight_loop_contents();

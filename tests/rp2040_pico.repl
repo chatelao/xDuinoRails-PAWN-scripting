@@ -15,6 +15,7 @@ flash: Memory.MappedMemory @ sysbus 0x10000000
     size: 0x200000
 
 uart0: UART.PL011 @ sysbus 0x40034000
+    IRQ -> nvic@20
 
 sysbus:
     init:
@@ -23,8 +24,11 @@ sysbus:
         Tag <0x40014000 0x1000> "GPIO"
         Tag <0xd0000000 0x1000> "SIO"
         Tag <0x4000c000 0x1000> "Resets" 0xFFFFFFFF
-        Tag <0x40004000 0x1000> "SysInfo"
-        Tag <0x40000000 0x1000> "SysCfg"
+        Tag <0x40004000 0x1000> "SysInfo" 0xFFFFFFFF
+        Tag <0x40000000 0x1000> "SysCfg" 0xFFFFFFFF
+        Tag <0x40024000 0x1000> "XOSC" 0xFFFFFFFF
+        Tag <0x40028000 0x1000> "PLL_SYS" 0xFFFFFFFF
+        Tag <0x4002c000 0x1000> "PLL_USB" 0xFFFFFFFF
         Tag <0x40030000 0x1000> "UART1"
         Tag <0x4003c000 0x1000> "SPI0"
         Tag <0x40040000 0x1000> "SPI1"
@@ -32,11 +36,11 @@ sysbus:
         Tag <0x40048000 0x1000> "I2C1"
         Tag <0x4004c000 0x1000> "ADC"
         Tag <0x40050000 0x1000> "PWM"
-        Tag <0x40054000 0x1000> "TIMER"
-        Tag <0x40058000 0x1000> "WATCHDOG"
+        Tag <0x40054000 0x1000> "TIMER" 0xFFFFFFFF
+        Tag <0x40058000 0x1000> "WATCHDOG" 0xFFFFFFFF
         Tag <0x4005c000 0x1000> "RTC"
-        Tag <0x40060000 0x1000> "ROSC"
-        Tag <0x40064000 0x1000> "VREG"
+        Tag <0x40060000 0x1000> "ROSC" 0xFFFFFFFF
+        Tag <0x40064000 0x1000> "VREG" 0xFFFFFFFF
         Tag <0x40068000 0x1000> "TBMAN"
         Tag <0x50000000 0x1000> "DMA"
         Tag <0x50110000 0x1000> "USB"

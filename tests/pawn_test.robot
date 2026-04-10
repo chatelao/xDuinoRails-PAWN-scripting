@@ -20,10 +20,11 @@ Should Blink LED Via Pawn Script
     Execute Command             logLevel 2
     Create Terminal Tester      ${UART}
     Start Emulation
-    # The firmware might need a bit more time or might be failing silently
-    # Let's wait for ANY output first
+    # Wait for the boot message
     Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=30
-    Wait For Line On Uart       Executing Pawn script...
+    # Send 's' to skip the 5s YMODEM wait
+    Execute Command             ${UART} WriteChar 115
+    Wait For Line On Uart       Executing Pawn script...     timeout=30
     Wait For Line On Uart       LED STATE: 1
     Wait For Line On Uart       LED STATE: 0
     Wait For Line On Uart       LED STATE: 1
