@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('PAWN Online Compiler', () => {
+test.describe('XDRscript', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
 
   test('should load the page and initialize the compiler', async ({ page }) => {
-    await expect(page).toHaveTitle(/PAWN Online Compiler/);
+    await expect(page).toHaveTitle(/XDRscript/);
     const compileBtn = page.locator('#compile-btn');
     await expect(compileBtn).toBeEnabled({ timeout: 10000 });
     await expect(compileBtn).toHaveText('Compile');
