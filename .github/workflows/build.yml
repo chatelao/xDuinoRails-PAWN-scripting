@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-firmware:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,7 +22,11 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs
+
+      - name: Compile Pawn Script
+        run: |
+          node scripts/compile_pawn.js
 
       - name: Cache Pico SDK
         id: cache-pico-sdk
@@ -44,6 +48,18 @@ jobs:
           cd build
           cmake ../src -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
           make
+
+      - name: Setup Renode
+        uses: antmicro/renode-test-action@v4
+        with:
+          # renode-version: '1.16.1' # Default might be better if 1.16.1 is missing rp2040
+          tests-to-run: 'tests/pawn_test.robot'
+
+      - name: List Renode Platforms (Debug)
+        if: failure()
+        run: |
+          find /home/runner/work/_temp/renode* -name "*.repl" | grep rp2040 || true
+          find /home/runner/work/_temp/renode* -name "*.repl" | grep pico || true
 
       - name: Upload UF2 Artifact
         uses: actions/upload-artifact@v4
