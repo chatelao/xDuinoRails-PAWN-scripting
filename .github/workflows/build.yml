@@ -56,6 +56,7 @@ jobs:
 
       - name: Run Renode Tests
         run: |
+          pip3 install -r renode/tests/requirements.txt
           ./renode/renode-test tests/pawn_test.robot
 
       - name: Upload UF2 Artifact
