@@ -29,6 +29,9 @@ You can upload a compiled `.amx` script to the Seeed RP2040 without re-flashing 
     - On Linux using `sx`: `sb --ymodem myscript.amx < /dev/ttyACM0 > /dev/ttyACM0`
     - On Tera Term: `File -> Transfer -> YMODEM -> Send...`
 6.  Once the transfer is complete, the script will start automatically.
+### Documentation
+
+For a comprehensive guide to the Pawn language, refer to the official [Pawn Language Guide](https://codeberg.org/compuphase/pawn/raw/branch/main/doc/Pawn_Language_Guide.pdf).
 
 ### Example script (blink.p)
 
