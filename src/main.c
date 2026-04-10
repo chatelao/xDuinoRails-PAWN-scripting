@@ -6,6 +6,7 @@
 #include "third_party/pawn/amx.h"
 #include "blink_amx.h"
 #include "ymodem.h"
+#include "flash_storage.h"
 
 // Default LED pin for Seeed Studio XIAO RP2040
 #ifndef LED_PIN
@@ -85,6 +86,14 @@ int main() {
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
     printf("\n\nPawn LED Runtime Starting...\n");
+
+    // Try to load script from FLASH
+    if (flash_storage_load(script_buffer, &script_len, SCRIPT_MAX_SIZE) == 0) {
+        printf("Loaded script from FLASH (%d bytes)\n", (int)script_len);
+    } else {
+        printf("No script found in FLASH.\n");
+    }
+
     printf("Press 'u' within 5 seconds to upload a new script via YMODEM...\n");
 
     int64_t start_time = time_us_64();
@@ -101,27 +110,6 @@ int main() {
     if (upload_mode) {
         printf("Entering YMODEM upload mode. Start your YMODEM transfer now...\n");
 
-        // In Pico SDK, stdout is a pointer to a driver wrapped in a FILE struct.
-        // We want to disable CRLF translation for binary-safe transfer.
-        // Using a loop to find and disable all stdio drivers' CRLF translation is a common pattern.
-        // Or we can just use the global stdio_set_translate_crlf which affects all current drivers if driver is NULL.
-        // Wait, the documentation says: void stdio_set_translate_crlf(stdio_driver_t *driver, bool enabled);
-        // If driver is NULL, it's not clear what it does.
-        // In many Pico examples, they use:
-        // stdio_set_translate_crlf(&stdio_usb, false);
-        // But &stdio_usb might not be defined if USB is not enabled.
-        // Let's check how to correctly disable CRLF translation.
-
-        // Actually, the reviewer mentioned: "the first argument must be a stdio_driver_t* (e.g., &stdio_usb), not a FILE*."
-        // Since we don't know for sure which driver is active, but common is USB.
-        // A safer way in Pico SDK to disable it for the default console is:
-
-        // extern stdio_driver_t stdio_usb;
-        // stdio_set_translate_crlf(&stdio_usb, false);
-
-        // But since I cannot easily verify the driver, I'll try to use a more general approach or follow the reviewer's hint.
-        // Let's assume &stdio_usb is what we want.
-
         extern stdio_driver_t stdio_usb;
         stdio_set_translate_crlf(&stdio_usb, false);
         extern stdio_driver_t stdio_uart;
@@ -136,6 +124,13 @@ int main() {
         if (res > 0) {
             printf("\nSuccessfully received %d bytes: %s\n", res, filename);
             script_len = res;
+
+            // Save to FLASH
+            if (flash_storage_save(script_buffer, script_len) == 0) {
+                printf("Script saved to FLASH.\n");
+            } else {
+                printf("Failed to save script to FLASH.\n");
+            }
         } else {
             printf("\nYMODEM upload failed with error %d\n", res);
         }

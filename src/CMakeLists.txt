@@ -10,6 +10,7 @@ pico_sdk_init()
 add_executable(pawn_led
     main.c
     ymodem.c
+    flash_storage.c
     third_party/pawn/amx.c
     third_party/pawn/amxcore.c
 )
@@ -26,7 +27,7 @@ target_include_directories(pawn_led PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pawn
 )
 
-target_link_libraries(pawn_led pico_stdlib hardware_gpio)
+target_link_libraries(pawn_led pico_stdlib hardware_gpio hardware_flash hardware_sync)
 
 # Enable USB and UART stdio
 pico_enable_stdio_usb(pawn_led 1)
