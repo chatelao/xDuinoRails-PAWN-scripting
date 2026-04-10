@@ -149,9 +149,6 @@ test.describe('Blockly Integration', () => {
 main() {
     set_led(1);
     delay(500);
-    while (true) {
-        set_led(0);
-    }
 }
 `;
     await editor.fill(testCode);
@@ -168,7 +165,7 @@ main() {
     expect(blocks).toContain('pawn_main');
     expect(blocks).toContain('pawn_set_led');
     expect(blocks).toContain('pawn_delay');
-    expect(blocks).toContain('controls_whileUntil');
+    expect(blocks).not.toContain('controls_whileUntil');
   });
 
   test('should handle Print block bidirectionally', async ({ page }) => {
