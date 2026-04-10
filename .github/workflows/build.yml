@@ -46,14 +46,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install --user robotframework
-          # Install Renode
-          wget https://builds.antmicro.com/renode/nightly/renode-latest.deb
-          sudo apt-get install -y ./renode-latest.deb
-          rm renode-latest.deb
+          # Install Renode (portable version)
+          wget https://github.com/renode/renode/releases/download/v1.15.3/renode-1.15.3.linux-portable.tar.gz
+          tar -xzf renode-1.15.3.linux-portable.tar.gz
+          mv renode_1.15.3_portable renode
+          # Dependencies for portable version
+          sudo apt-get install -y libncurses5 libgtk2.0-0 mono-complete
 
       - name: Run Renode Tests
         run: |
-          renode-test tests/pawn_test.robot
+          export PATH=$GITHUB_WORKSPACE/renode:$PATH
+          ./renode/renode-test tests/pawn_test.robot
 
       - name: Upload UF2 Artifact
         uses: actions/upload-artifact@v4
