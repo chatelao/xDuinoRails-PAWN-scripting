@@ -147,16 +147,24 @@ int main() {
     if (upload_mode) {
         printf("Entering YMODEM upload mode. Start your YMODEM transfer now...\n");
 
+#if PICO_STDIO_USB
         extern stdio_driver_t stdio_usb;
         stdio_set_translate_crlf(&stdio_usb, false);
+#endif
+#if PICO_STDIO_UART
         extern stdio_driver_t stdio_uart;
         stdio_set_translate_crlf(&stdio_uart, false);
+#endif
 
         char filename[64];
         int res = ymodem_receive(script_buffer, SCRIPT_MAX_SIZE, filename);
 
+#if PICO_STDIO_USB
         stdio_set_translate_crlf(&stdio_usb, true);
+#endif
+#if PICO_STDIO_UART
         stdio_set_translate_crlf(&stdio_uart, true);
+#endif
 
         if (res > 0) {
             printf("\nSuccessfully received %d bytes: %s\n", res, filename);
