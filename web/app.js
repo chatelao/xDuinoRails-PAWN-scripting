@@ -11,6 +11,28 @@ Blockly.Blocks['pawn_main'] = {
   }
 };
 
+Blockly.Blocks['pawn_speed'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("speed");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the current speed (fixed at 55)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_direction'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("direction");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the current direction (Forward)");
+    this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['pawn_set_led'] = {
   init: function() {
     this.appendDummyInput()
@@ -77,6 +99,14 @@ PawnGenerator.forBlock['pawn_delay'] = function(block) {
 PawnGenerator.forBlock['pawn_print'] = function(block) {
   const text = PawnGenerator.valueToCode(block, 'TEXT', PawnGenerator.PRECEDENCE.ATOMIC) || '""';
   return 'print(' + text + ');\n';
+};
+
+PawnGenerator.forBlock['pawn_speed'] = function(block) {
+  return ['speed()', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_direction'] = function(block) {
+  return ['direction()', PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
 PawnGenerator.forBlock['text'] = function(block) {
@@ -204,7 +234,11 @@ function generatePawnCode() {
         log('Error generating code: ' + e);
     }
     return 'native set_led(status);\n' +
-           'native delay(ms);\n\n' +
+           'native delay(ms);\n' +
+           'native speed();\n' +
+           'native direction();\n\n' +
+           'const FORWARD = 1;\n' +
+           'const BACKWARD = 0;\n\n' +
            generatedCode;
 }
 
