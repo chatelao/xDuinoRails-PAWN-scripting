@@ -28,6 +28,8 @@
     <div class="toolbar">
         <button id="compile-btn" disabled>Loading Compiler...</button>
         <button id="load-btn">Load Script (.pwn)</button>
+        <button id="copy-to-code">Copy to Code</button>
+        <button id="copy-to-blocks">Copy to Blockly</button>
         <button id="toggle-editor" class="toggle-btn">Switch to Blocks</button>
         <input type="file" id="file-input" accept=".pwn,.p,.inc" style="display: none;">
         <a id="download-link" href="#" download="script.amx">Download .amx</a>
@@ -92,6 +94,16 @@ main() {
             <block type="pawn_main"></block>
             <block type="pawn_set_led"></block>
             <block type="pawn_delay"></block>
+            <block type="pawn_print">
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">Hello, World!</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="Text" colour="#5ba58c">
+            <block type="text"></block>
         </category>
         <category name="Logic" colour="#5b80a5">
             <block type="controls_if"></block>

@@ -25,9 +25,20 @@ static cell AMX_NATIVE_CALL n_delay(AMX *amx, const cell *params) {
     return 0;
 }
 
+// Native function: print(const string[])
+static cell AMX_NATIVE_CALL n_print(AMX *amx, const cell *params) {
+    char *str;
+    amx_StrParam(amx, params[1], str);
+    if (str != NULL) {
+        printf("%s", str);
+    }
+    return 0;
+}
+
 static const AMX_NATIVE_INFO led_natives[] = {
     { "set_led", n_set_led },
     { "delay",   n_delay },
+    { "print",   n_print },
     { NULL, NULL }
 };
 

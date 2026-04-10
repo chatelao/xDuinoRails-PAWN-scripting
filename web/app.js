@@ -39,6 +39,19 @@ Blockly.Blocks['pawn_delay'] = {
   }
 };
 
+Blockly.Blocks['pawn_print'] = {
+  init: function() {
+    this.appendValueInput("TEXT")
+        .setCheck("String")
+        .appendField("print");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(160);
+    this.setTooltip("Prints text to the console");
+    this.setHelpUrl("");
+  }
+};
+
 // PAWN Generator
 const PawnGenerator = new Blockly.Generator('PAWN');
 
@@ -59,6 +72,16 @@ PawnGenerator.forBlock['pawn_set_led'] = function(block) {
 PawnGenerator.forBlock['pawn_delay'] = function(block) {
   const ms = PawnGenerator.valueToCode(block, 'MS', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
   return 'delay(' + ms + ');\n';
+};
+
+PawnGenerator.forBlock['pawn_print'] = function(block) {
+  const text = PawnGenerator.valueToCode(block, 'TEXT', PawnGenerator.PRECEDENCE.ATOMIC) || '""';
+  return 'print(' + text + ');\n';
+};
+
+PawnGenerator.forBlock['text'] = function(block) {
+  const code = JSON.stringify(block.getFieldValue('TEXT'));
+  return [code, PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
 PawnGenerator.forBlock['math_number'] = function(block) {
@@ -153,6 +176,8 @@ PawnGenerator.scrub_ = function(block, code, opt_thisOnly) {
 
 const compileBtn = document.getElementById('compile-btn');
 const loadBtn = document.getElementById('load-btn');
+const copyToCodeBtn = document.getElementById('copy-to-code');
+const copyToBlocksBtn = document.getElementById('copy-to-blocks');
 const toggleBtn = document.getElementById('toggle-editor');
 const fileInput = document.getElementById('file-input');
 const downloadLink = document.getElementById('download-link');
@@ -168,7 +193,10 @@ let lastGeneratedCode = '';
 function generatePawnCode() {
     let generatedCode = '';
     try {
-        generatedCode = PawnGenerator.workspaceToCode(workspace);
+        const ws = workspace || Blockly.getMainWorkspace();
+        if (ws) {
+            generatedCode = PawnGenerator.workspaceToCode(ws);
+        }
     } catch (e) {
         log('Error generating code: ' + e);
     }
@@ -178,7 +206,13 @@ function generatePawnCode() {
 }
 
 function generateBlocksFromCode(code) {
-    if (!workspace) return;
+    if (!workspace) {
+        workspace = Blockly.inject('blockly-div', {
+            toolbox: document.getElementById('toolbox'),
+            scrollbars: true,
+            trashcan: true
+        });
+    }
     workspace.clear();
 
     // Remove comments and native declarations
@@ -207,6 +241,20 @@ function parseStatements(code, connection) {
         if (match = remaining.match(/^set_led\((\d+)\);/)) {
             const block = workspace.newBlock('pawn_set_led');
             block.setFieldValue(match[1], 'STATUS');
+            block.initSvg();
+            block.render();
+            currentConnection.connect(block.previousConnection);
+            currentConnection = block.nextConnection;
+            remaining = remaining.substring(match[0].length).trim();
+        }
+        // print("text")
+        else if (match = remaining.match(/^print\(\"([^\"]*)\"\);/)) {
+            const block = workspace.newBlock('pawn_print');
+            const textBlock = workspace.newBlock('text');
+            textBlock.setFieldValue(match[1], 'TEXT');
+            textBlock.initSvg();
+            textBlock.render();
+            block.getInput('TEXT').connection.connect(textBlock.outputConnection);
             block.initSvg();
             block.render();
             currentConnection.connect(block.previousConnection);
@@ -339,6 +387,19 @@ toggleBtn.addEventListener('click', () => {
             generateBlocksFromCode(currentCode);
         }
     }
+});
+
+copyToCodeBtn.addEventListener('click', () => {
+    const code = generatePawnCode();
+    editor.value = code;
+    lastGeneratedCode = code;
+    log('Copied Blockly to Code.');
+});
+
+copyToBlocksBtn.addEventListener('click', () => {
+    const currentCode = editor.value;
+    generateBlocksFromCode(currentCode);
+    log('Copied Code to Blockly.');
 });
 
 function log(text) {
