@@ -87,7 +87,12 @@ PawnGenerator.forBlock['controls_if'] = function(block) {
   let n = 0;
   let code = '';
   do {
-    const conditionCode = PawnGenerator.valueToCode(block, 'IF' + n, PawnGenerator.PRECEDENCE.ATOMIC) || 'false';
+    let conditionCode = PawnGenerator.valueToCode(block, 'IF' + n, PawnGenerator.PRECEDENCE.ATOMIC);
+    if (!conditionCode && block.getField('COND' + n)) {
+        conditionCode = block.getFieldValue('COND' + n);
+    }
+    if (!conditionCode) conditionCode = 'false';
+
     const branchCode = PawnGenerator.statementToCode(block, 'DO' + n);
     code += (n === 0 ? 'if (' : ' else if (') + conditionCode + ') {\n' + branchCode + '}';
     n++;
@@ -285,6 +290,99 @@ function parseStatements(code, connection) {
             currentConnection.connect(block.previousConnection);
             currentConnection = block.nextConnection;
             remaining = remaining.substring(i).trim();
+        }
+        // if (cond) { ... } [else if (cond) { ... }] [else { ... }]
+        else if (match = remaining.match(/^if\s*\(([^)]+)\)\s*\{/)) {
+            const block = workspace.newBlock('controls_if');
+            let elseIfCount = 0;
+            let hasElse = false;
+
+            const handleBranch = (condition, body, index) => {
+                // Handle condition
+                if (condition === 'true' || condition === 'false') {
+                    const boolBlock = workspace.newBlock('logic_boolean');
+                    boolBlock.setFieldValue(condition.toUpperCase(), 'BOOL');
+                    boolBlock.initSvg();
+                    boolBlock.render();
+                    block.getInput('IF' + index).connection.connect(boolBlock.outputConnection);
+                } else {
+                    // For complex conditions, we add a text field to the IF input
+                    const input = block.getInput('IF' + index);
+                    input.appendField(new Blockly.FieldTextInput(condition), 'COND' + index);
+                }
+                // Handle body
+                parseStatements(body, block.getInput('DO' + index).connection);
+            };
+
+            const firstCondition = match[1].trim();
+            let i = match[0].length;
+            let start = i;
+            let braceCount = 1;
+            while (braceCount > 0 && i < remaining.length) {
+                if (remaining[i] === '{') braceCount++;
+                if (remaining[i] === '}') braceCount--;
+                i++;
+            }
+            const firstBody = remaining.substring(start, i - 1).trim();
+            remaining = remaining.substring(i).trim();
+
+            const branches = [{cond: firstCondition, body: firstBody}];
+
+            while (true) {
+                if (match = remaining.match(/^else\s+if\s*\(([^)]+)\)\s*\{/)) {
+                    elseIfCount++;
+                    const cond = match[1].trim();
+                    i = match[0].length;
+                    start = i;
+                    braceCount = 1;
+                    while (braceCount > 0 && i < remaining.length) {
+                        if (remaining[i] === '{') braceCount++;
+                        if (remaining[i] === '}') braceCount--;
+                        i++;
+                    }
+                    const body = remaining.substring(start, i - 1).trim();
+                    branches.push({cond, body});
+                    remaining = remaining.substring(i).trim();
+                } else if (match = remaining.match(/^else\s*\{/)) {
+                    hasElse = true;
+                    i = match[0].length;
+                    start = i;
+                    braceCount = 1;
+                    while (braceCount > 0 && i < remaining.length) {
+                        if (remaining[i] === '{') braceCount++;
+                        if (remaining[i] === '}') braceCount--;
+                        i++;
+                    }
+                    const body = remaining.substring(start, i - 1).trim();
+                    branches.push({body});
+                    remaining = remaining.substring(i).trim();
+                    break; // else is always last
+                } else {
+                    break;
+                }
+            }
+
+            // Update mutation
+            if (elseIfCount > 0 || hasElse) {
+                block.loadExtraState({
+                    'elseIfCount': elseIfCount,
+                    'hasElse': hasElse
+                });
+            }
+
+            // Connect everything
+            for (let j = 0; j < branches.length; j++) {
+                if (j <= elseIfCount) { // IF or ELSE IF
+                    handleBranch(branches[j].cond, branches[j].body, j);
+                } else { // ELSE
+                    parseStatements(branches[j].body, block.getInput('ELSE').connection);
+                }
+            }
+
+            block.initSvg();
+            block.render();
+            currentConnection.connect(block.previousConnection);
+            currentConnection = block.nextConnection;
         }
         else {
             // Skip unknown statement until semicolon or end
