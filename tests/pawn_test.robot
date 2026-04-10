@@ -1,18 +1,20 @@
 *** Settings ***
 Suite Setup     Setup
 Suite Teardown  Teardown
-Test Setup      Execute Script  ${RESC}
+Test Setup      Reset Emulation
 Resource        ${RENODEKEYWORDS}
 
 *** Variables ***
 ${UART}           sysbus.uart0
-${RESC}           ${CURDIR}/pawn_test.resc
 ${BIN}            ${CURDIR}/../build/pawn_led.elf
 
 *** Test Cases ***
 Should Blink LED Via Pawn Script
     [Documentation]             Verifies that the Pawn script correctly toggles the LED by checking UART output.
     [Tags]                      pawn  led  blink
+    Execute Command             mach create
+    Execute Command             machine LoadPlatformDescription @platforms/cpus/rp2040.repl
+    Execute Command             sysbus LoadELF ${BIN}
     Create Terminal Tester      ${UART}
     Start Emulation
     Wait For Line On Uart       Pawn LED Runtime Starting...

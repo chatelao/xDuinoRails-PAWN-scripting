@@ -44,7 +44,7 @@ jobs:
       - name: Setup Renode
         uses: antmicro/renode-test-action@v4
         with:
-          renode-version: '1.16.1'
+          # renode-version: '1.16.1' # Default might be better if 1.16.1 is missing rp2040
           tests-to-run: 'tests/pawn_test.robot'
 
       - name: Upload UF2 Artifact
