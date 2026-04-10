@@ -1,11 +1,12 @@
 *** Settings ***
 Suite Setup     Setup
 Suite Teardown  Teardown
-Test Setup      Reset Emulation
+Test Setup      Execute Script  ${RESC}
 Resource        ${RENODEKEYWORDS}
 
 *** Variables ***
 ${UART}           sysbus.uart0
+${RESC}           ${CURDIR}/pawn_test.resc
 ${BIN}            ${CURDIR}/../build/pawn_led.elf
 
 *** Test Cases ***
