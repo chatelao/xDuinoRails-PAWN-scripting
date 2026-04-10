@@ -33,6 +33,18 @@ Blockly.Blocks['pawn_direction'] = {
   }
 };
 
+Blockly.Blocks['pawn_cv'] = {
+  init: function() {
+    this.appendValueInput("ID")
+        .setCheck("Number")
+        .appendField("CV");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns a random value (0-255) for the given CV ID");
+    this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['pawn_set_led'] = {
   init: function() {
     this.appendDummyInput()
@@ -64,7 +76,7 @@ Blockly.Blocks['pawn_delay'] = {
 Blockly.Blocks['pawn_print'] = {
   init: function() {
     this.appendValueInput("TEXT")
-        .setCheck("String")
+        .setCheck(null)
         .appendField("print");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -107,6 +119,11 @@ PawnGenerator.forBlock['pawn_speed'] = function(block) {
 
 PawnGenerator.forBlock['pawn_direction'] = function(block) {
   return ['direction()', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_cv'] = function(block) {
+  const id = PawnGenerator.valueToCode(block, 'ID', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  return ['CV(' + id + ')', PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
 PawnGenerator.forBlock['text'] = function(block) {
@@ -236,7 +253,8 @@ function generatePawnCode() {
     return 'native set_led(status);\n' +
            'native delay(ms);\n' +
            'native speed();\n' +
-           'native direction();\n\n' +
+           'native direction();\n' +
+           'native CV(id);\n\n' +
            'const FORWARD = 1;\n' +
            'const BACKWARD = 0;\n\n' +
            generatedCode;
@@ -282,6 +300,13 @@ function parseStatements(code, connection) {
             block.render();
             currentConnection.connect(block.previousConnection);
             currentConnection = block.nextConnection;
+            remaining = remaining.substring(match[0].length).trim();
+        }
+        // CV(id) - as a statement (though it's an expression)
+        else if (match = remaining.match(/^CV\((\d+)\);/)) {
+            // Technically CV(id); is valid but does nothing.
+            // We don't have a statement block for CV, it's an expression.
+            // If it appears as a statement, we just skip it for now or we could add a block.
             remaining = remaining.substring(match[0].length).trim();
         }
         // print("text")
