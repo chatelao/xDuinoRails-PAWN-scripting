@@ -9,6 +9,7 @@ pico_sdk_init()
 
 add_executable(pawn_led
     main.c
+    ymodem.c
     third_party/pawn/amx.c
     third_party/pawn/amxcore.c
 )
