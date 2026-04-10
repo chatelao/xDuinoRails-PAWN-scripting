@@ -1,0 +1,624 @@
+/* An assortment of additional functions in the DLL version of the
+ * Abstract Machine.
+ *
+ * (c) Copyright 2000-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+
+enum
+    {
+    Ok,
+    Okcancel,
+    okCancel,
+    Yesno,
+    yesNo,
+    Yesnocancel,
+    yesNocancel,
+    yesnoCancel,
+    }
+enum
+    {
+    noicon,
+    information,
+    exclamation,
+    question,
+    stop
+    }
+native messagebox(const message[], const caption[], buttons=Ok, icons=noicon, timeout=0);
+
+/* Types:
+ *    i = integer (16/32 bit)
+ *    l = 32-bit integer
+ *    h = handle (16/32 bit)
+ *    p = packed string
+ *    s = (unpacked) string
+ *    w = 16-bit unsigned integer
+ * lower case = by value, upper case = by reference
+ *
+ * The types noted as "16/32 bit" are converted to 16-bit in Win16 environments
+ * prior to the call to the DLL.
+ *
+ * calldll() attaches "32" to the dll name if it cannot load the DLL as you
+ * provide it. So it loads "user32" if you specify "user" and you are in Win32.
+ * calldll() also appends a "A" to the function name if it cannot find the
+ * function as specified. So it call "GetWindowTextA" if you ask for
+ * "GetWindowText". By this means, the interface is more compatible between
+ * 16-bit and 32-bit platforms.
+ */
+native calldll(const dllname[], const function[], const typestr[]="", ...);
+
+native loaddll(const dllname[]);
+native freedll(const dllname[]);
+
+native iswin32();
+
+native balloon(&Balloon:handle, text[]="", x=0, y=0, timeout=-1);
+native balloonfont(&Balloon:handle, const font[]="", height=16, weight=400, italic=0);
+
+stock wGetCursorPos(&x, &y)
+    /* Get the current position of the mouse cursor relative to the upper
+     * left corner of the screen
+     */
+    {
+    new point[2]
+    calldll(!"user","GetCursorPos","I",point)
+    if (!iswin32())
+        {
+        point[1] = point[0] >> 16
+        point[0] &= 0xffff
+        }
+    x = point[0]
+    y = point[1]
+    }
+
+
+/* Script Arguments support functions
+ *
+ * (c) Copyright 2005-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Args
+
+native argcount();
+native bool: argindex(index, value[], maxlength = sizeof value, bool: pack = true);
+native bool: argstr(index = 0, const option[] = ``'', value[] = ``'', maxlength = sizeof value, bool: pack = true);
+native bool: argvalue(index = 0, const option[] = ``'', &value = cellmin);
+/* Minimalistic wrapper for the "Better String library" by Paul Hsieh
+ *
+ * (c) Copyright 2004-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library BString
+
+/* native functions */
+native String: bstring(const source[] = ``'');
+native String: bstrdup(String: source);
+native String: bstrcat(String: target, String: source);
+native         bstrlen(String: source);
+native String: bstrmid(String: source, start = 0, length = cellmax);
+native         bstrtoarray(target[], size = sizeof target, String: source,
+                           bool: packed = true);
+
+/* user-defined operators */
+native String:operator=(String:oper) = bstrdup;
+native String:operator+(String:oper1, String:oper2) = bstrcat;
+/* Console input/output functions
+ *
+ * (c) Copyright 1998-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Console
+
+const
+    {
+    black = 0,  /* colours as per the ANSI Escape sequences, ISO 6429 */
+    red,
+    green,
+    yellow,
+    blue,
+    magenta,
+    cyan,
+    white,
+    };
+
+native getchar(echo=true);
+native getstring(string[], maxlength=sizeof string, bool:pack=true);
+native getvalue(base=10, term=0x0d, ...);    /* 0x0d == '\r' */
+native print(const string[], foreground=-1, background=-1, highlight=-1);
+native printf(const format[], {Float,Fixed,_}:...);
+
+native console(columns, lines);
+native clrscr();        /* also resets the cursor to (1,1) */
+native clreol();
+native gotoxy(x=1, y=1);
+native wherexy(&x, &y);
+native setattr(foreground=-1, background=-1, highlight=-1);
+
+forward @keypressed(key);
+/* Core functions
+ *
+ * (c) Copyright 1998-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Core
+
+native heapspace();
+
+native funcidx(const name[]);
+
+native numargs();
+native getarg(arg, index=0);
+native setarg(arg, index=0, value);
+
+native tolower(c);
+native toupper(c);
+native swapchars(c);
+
+native random(max);
+
+native min(value1, value2);
+native max(value1, value2);
+native clamp(value, min=cellmin, max=cellmax);
+
+native getproperty(id=0, const name[]=``'', value=cellmin, string[]=``'', size=sizeof string);
+native setproperty(id=0, const name[]=``'', value=cellmin, const string[]=``'');
+native deleteproperty(id=0, const name[]=``'', value=cellmin);
+native existproperty(id=0, const name[]=``'', value=cellmin);
+
+/* Datagram sending/receiving
+ *
+ * (c) Copyright 2005-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library DGram
+
+native sendstring(const message[], const destination[]=``'');
+native sendpacket(const packet[], size, const destination[]=``'');
+
+native listenport(port);
+
+forward @receivestring(const message[], const source[]);
+forward @receivepacket(const packet[], size, const source[]);
+#include <core>
+#include <console>
+/* File input/output functions
+ *
+ * (c) Copyright 2004-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library File
+
+const filemode:
+    {
+    io_read = 0,        /* file must exist */
+    io_write,           /* creates a new file */
+    io_readwrite,       /* opens an existing file, or creates a new file */
+    io_append,          /* appends to file (write-only) */
+    };
+
+const seek_whence:
+    {
+    seek_start = 0,
+    seek_current,
+    seek_end,
+    };
+
+const EOF = -1;
+
+native File: fopen(const name[], filemode: mode = io_readwrite);
+native bool: fclose(File: handle);
+native File: ftemp();
+native bool: fremove(const name[]);
+native bool: fcopy(const source[], const target[]);
+native bool: frename(const oldname[], const newname[]);
+native bool: fcreatedir(const name[]);
+
+native       fwrite(File: handle, const string[]);
+native       fread(File: handle, string[], size = sizeof string, bool: pack = true);
+native bool: fputchar(File: handle, value, bool: utf8 = true);
+native       fgetchar(File: handle, bool: utf8 = true);
+native       fblockwrite(File: handle, const buffer[], size = sizeof buffer);
+native       fblockread(File: handle, buffer[], size = sizeof buffer);
+
+native       fseek(File: handle, position = 0, seek_whence: whence = seek_start);
+native       flength(File: handle);
+native       fexist(const pattern[]);
+native bool: fmatch(name[], const pattern[], index = 0, size = sizeof name);
+native bool: fstat(name[], &size = 0, &timestamp = 0, &mode = 0, &inode = 0);
+native bool: fattrib(const name[], timestamp=0, attrib=0x0f);
+native       filecrc(const name[]);
+
+native       readcfg(const filename[]=``'', const section[]=``'', const key[], value[], size=sizeof value, const defvalue[]=``'', bool:pack=true);
+native       readcfgvalue(const filename[]=``'', const section[]=``'', const key[], defvalue=0);
+native bool: writecfg(const filename[]=``'', const section[]=``'', const key[], const value[]);
+native bool: writecfgvalue(const filename[]=``'', const section[]=``'', const key[], value);
+native bool: deletecfg(const filename[]=``'', const section[]=``'', const key[]=``'');
+/* Fixed point arithmetic
+ *
+ * (c) Copyright 1998-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Fixed
+
+const fround_method: {
+  fround_round = 0,
+  fround_floor,
+  fround_ceil,
+  fround_tozero,
+  fround_unbiased
+};
+
+native Fixed:fixed(value);
+native Fixed:strfixed(const string[]);
+native Fixed:fmul(Fixed:oper1, Fixed:oper2);
+native Fixed:fdiv(Fixed:dividend, Fixed:divisor);
+native Fixed:ffract(Fixed:value);
+native       fround(Fixed:value, fround_method:method=fround_round);
+native Fixed:fpower(Fixed:value, exponent);
+native Fixed:fsqroot(Fixed:value);
+native Fixed:fabs(Fixed:value);
+
+#pragma rational Fixed(3)
+
+/* user defined operators */
+native Fixed:operator*(Fixed:oper1, Fixed:oper2) = fmul;
+native Fixed:operator/(Fixed:oper1, Fixed:oper2) = fdiv;
+native Fixed:operator=(oper) = fixed;
+
+stock Fixed:operator++(Fixed:oper)
+    return oper + fixed(1);
+
+stock Fixed:operator--(Fixed:oper)
+    return oper - fixed(1);
+
+stock Fixed:operator*(Fixed:oper1, oper2)
+    return Fixed: (_:oper1 * oper2);            /* "*" is commutative */
+
+stock Fixed:operator/(Fixed:oper1, oper2)
+    return oper1 / fixed(oper2);
+
+stock Fixed:operator/(oper1, Fixed:oper2)
+    return fdiv(fixed(oper1), oper2);
+
+stock Fixed:operator+(Fixed:oper1, oper2)
+    return oper1 + fixed(oper2);                /* "+" is commutative */
+
+stock Fixed:operator-(Fixed:oper1, oper2)
+    return oper1 - fixed(oper2);
+
+stock Fixed:operator-(oper1, Fixed:oper2)
+    return fixed(oper1) - oper2;
+
+stock bool:operator>(Fixed:oper1, oper2)
+    return oper1 > fixed(oper2);
+
+stock bool:operator>(oper1, Fixed:oper2)
+    return fixed(oper1) > oper2;
+
+stock bool:operator>=(Fixed:oper1, oper2)
+    return oper1 >= fixed(oper2);
+
+stock bool:operator>=(oper1, Fixed:oper2)
+    return fixed(oper1) >= oper2;
+
+stock bool:operator<(Fixed:oper1, oper2)
+    return oper1 < fixed(oper2);
+
+stock bool:operator<(oper1, Fixed:oper2)
+    return fixed(oper1) < oper2;
+
+stock bool:operator<=(Fixed:oper1, oper2)
+    return oper1 <= fixed(oper2);
+
+stock bool:operator<=(oper1, Fixed:oper2)
+    return fixed(oper1) <= oper2;
+
+stock bool:operator==(Fixed:oper1, oper2)       /* "==" is commutative */
+    return oper1 == fixed(oper2);
+
+stock bool:operator!=(Fixed:oper1, oper2)       /* "!=" is commutative */
+    return oper1 != fixed(oper2);
+
+/* forbidden operations */
+forward operator%(Fixed:oper1, Fixed:oper2);
+forward operator%(Fixed:oper1, oper2);
+forward operator%(oper1, Fixed:oper2);
+
+/* Float arithmetic
+ *
+ * (c) Copyright 1999, Artran, Inc.
+ * Written by Greg Garner (gmg@artran.com)
+ * Modified in March 2001 to include user defined
+ * operators for the floating point functions.
+ *
+ * This file is provided as is (no warranties).
+ */
+#pragma library Float
+
+/* Different methods of rounding */
+const floatround_method: {
+  floatround_round = 0,
+  floatround_floor,
+  floatround_ceil,
+  floatround_tozero,
+  floatround_unbiased
+};
+const anglemode: {
+  radian = 0,
+  degrees,
+  grades
+};
+
+/**************************************************/
+/* Convert an integer into a floating point value */
+native Float:float(value);
+
+/**************************************************/
+/* Convert a string into a floating point value */
+native Float:strfloat(const string[]);
+
+/**************************************************/
+/* Multiple two floats together */
+native Float:floatmul(Float:oper1, Float:oper2);
+
+/**************************************************/
+/* Divide the dividend float by the divisor float */
+native Float:floatdiv(Float:dividend, Float:divisor);
+
+/**************************************************/
+/* Add two floats together */
+native Float:floatadd(Float:oper1, Float:oper2);
+
+/**************************************************/
+/* Subtract oper2 float from oper1 float */
+native Float:floatsub(Float:oper1, Float:oper2);
+
+/**************************************************/
+/* Return the fractional part of a float */
+native Float:floatfract(Float:value);
+
+/**************************************************/
+/* Round a float into a integer value */
+native       floatround(Float:value, floatround_method:method=floatround_round);
+
+/**************************************************/
+/* Compare two integers. If the two elements are equal, return 0.
+   If the first argument is greater than the second argument, return 1,
+   If the first argument is less than the second argument, return -1. */
+native       floatcmp(Float:oper1, Float:oper2);
+
+/**************************************************/
+/* Return the square root of the input value, same as floatpower(value, 0.5) */
+native Float:floatsqroot(Float:value);
+
+/**************************************************/
+/* Return the value raised to the power of the exponent */
+native Float:floatpower(Float:value, Float:exponent);
+
+/**************************************************/
+/* Return the logarithm */
+native Float:floatlog(Float:value, Float:base=10.0);
+
+/**************************************************/
+/* Return the sine, cosine or tangent. The input angle may be in radian,
+   degrees or grades. */
+native Float:floatsin(Float:value, anglemode:mode=radian);
+native Float:floatcos(Float:value, anglemode:mode=radian);
+native Float:floattan(Float:value, anglemode:mode=radian);
+
+/**************************************************/
+/* Return the absolute value */
+native Float:floatabs(Float:value);
+
+
+/**************************************************/
+#pragma rational Float
+
+/* user defined operators */
+native Float:operator*(Float:oper1, Float:oper2) = floatmul;
+native Float:operator/(Float:oper1, Float:oper2) = floatdiv;
+native Float:operator+(Float:oper1, Float:oper2) = floatadd;
+native Float:operator-(Float:oper1, Float:oper2) = floatsub;
+native Float:operator=(oper) = float;
+
+stock Float:operator++(Float:oper)
+    return oper+1.0;
+
+stock Float:operator--(Float:oper)
+    return oper-1.0;
+
+stock Float:operator-(Float:oper)
+    return oper^Float:cellmin;                  /* IEEE values are sign/magnitude */
+
+stock Float:operator*(Float:oper1, oper2)
+    return floatmul(oper1, float(oper2));       /* "*" is commutative */
+
+stock Float:operator/(Float:oper1, oper2)
+    return floatdiv(oper1, float(oper2));
+
+stock Float:operator/(oper1, Float:oper2)
+    return floatdiv(float(oper1), oper2);
+
+stock Float:operator+(Float:oper1, oper2)
+    return floatadd(oper1, float(oper2));       /* "+" is commutative */
+
+stock Float:operator-(Float:oper1, oper2)
+    return floatsub(oper1, float(oper2));
+
+stock Float:operator-(oper1, Float:oper2)
+    return floatsub(float(oper1), oper2);
+
+stock bool:operator==(Float:oper1, Float:oper2)
+    return floatcmp(oper1, oper2) == 0;
+
+stock bool:operator==(Float:oper1, oper2)
+    return floatcmp(oper1, float(oper2)) == 0;  /* "==" is commutative */
+
+stock bool:operator!=(Float:oper1, Float:oper2)
+    return floatcmp(oper1, oper2) != 0;
+
+stock bool:operator!=(Float:oper1, oper2)
+    return floatcmp(oper1, float(oper2)) != 0;  /* "!=" is commutative */
+
+stock bool:operator>(Float:oper1, Float:oper2)
+    return floatcmp(oper1, oper2) > 0;
+
+stock bool:operator>(Float:oper1, oper2)
+    return floatcmp(oper1, float(oper2)) > 0;
+
+stock bool:operator>(oper1, Float:oper2)
+    return floatcmp(float(oper1), oper2) > 0;
+
+stock bool:operator>=(Float:oper1, Float:oper2)
+    return floatcmp(oper1, oper2) >= 0;
+
+stock bool:operator>=(Float:oper1, oper2)
+    return floatcmp(oper1, float(oper2)) >= 0;
+
+stock bool:operator>=(oper1, Float:oper2)
+    return floatcmp(float(oper1), oper2) >= 0;
+
+stock bool:operator<(Float:oper1, Float:oper2)
+    return floatcmp(oper1, oper2) < 0;
+
+stock bool:operator<(Float:oper1, oper2)
+    return floatcmp(oper1, float(oper2)) < 0;
+
+stock bool:operator<(oper1, Float:oper2)
+    return floatcmp(float(oper1), oper2) < 0;
+
+stock bool:operator<=(Float:oper1, Float:oper2)
+    return floatcmp(oper1, oper2) <= 0;
+
+stock bool:operator<=(Float:oper1, oper2)
+    return floatcmp(oper1, float(oper2)) <= 0;
+
+stock bool:operator<=(oper1, Float:oper2)
+    return floatcmp(float(oper1), oper2) <= 0;
+
+stock bool:operator!(Float:oper)
+    return (_:oper & cellmax) == 0;
+
+/* forbidden operations */
+forward operator%(Float:oper1, Float:oper2);
+forward operator%(Float:oper1, oper2);
+forward operator%(oper1, Float:oper2);
+
+/* Process control and Foreign Function Interface (calling functions
+ * in DLLs or shared libraries)
+ *
+ * (c) Copyright 2006-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Process
+
+native libcall(const libname[], const funcname[], const typestring[], ...);
+native bool: libfree(const libname[]=``'');
+
+native PID:  procexec(const progname[]);
+native       procwait(PID:pid);
+native bool: procwrite(const line[], bool:appendlf=false);
+native bool: procread(line[], size=sizeof line, bool:striplf=false, bool:packed = true);
+/* Rational number support
+ * Loads either Float.inc or Fixed.inc, depending on the configuration
+ *
+ * (c) Copyright 2004-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+
+/* first try to include floating point support */
+#if !defined NOFLOAT
+  #tryinclude <float>
+#endif
+#if defined _inc_float || defined _inc_float_inc
+  #define Rational:             Float:
+  #define rval(%1)              strfloat(%1)
+  #define rround(%1,%2)         floatround(%1,%2)
+  #define rsqroot(%1)           floatsqroot(%1)
+  #define rpower(%1,%2)         floatpower(%1,%2)
+  #define rabs(%1)              floatabs(%1)
+
+  #define rround_round          floatround_round
+  #define rround_floor          floatround_floor
+  #define rround_ceil           floatround_ceil
+  #define rround_tozero         floatround_tozero
+  #define rround_unbiased       floatround_unbiased
+  #endinput
+#endif
+
+/* loading floating point support failed, try fixed point support */
+#if !defined NOFIXED
+  #tryinclude <fixed>
+#endif
+#if defined _inc_fixed || defined _inc_fixed_inc
+  #define Rational:             Fixed:
+  #define rval(%1)              strfixed(%1)
+  #define rround(%1,%2)         fround(%1,%2)
+  #define rsqroot(%1)           fsqroot(%1)
+  #define rpower(%1,%2)         fpower(%1,%2)
+  #define rabs(%1)              fabs(%1)
+
+  #define rround_round          fround_round
+  #define rround_floor          fround_floor
+  #define rround_ceil           fround_ceil
+  #define rround_tozero         fround_tozero
+  #define rround_unbiased       fround_unbiased
+  #endinput
+#endif
+
+/* if arrived here, neither floating point, nor fixed point support is available */
+#error Rational number support is unavailable (disabled or not installed)
+
+/* String functions
+ *
+ * (c) Copyright 2005-2012, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library String
+
+native strlen(const string[]);
+native strpack(dest[], const source[], maxlength=sizeof dest);
+native strunpack(dest[], const source[], maxlength=sizeof dest);
+native strcopy(dest[], const source[], maxlength=sizeof dest);
+native strcat(dest[], const source[], maxlength=sizeof dest);
+
+native strmid(dest[], const source[], start=0, end=cellmax, maxlength=sizeof dest);
+native bool: strins(string[], const substr[], index, maxlength=sizeof string);
+native bool: strdel(string[], start, end);
+
+native strcmp(const string1[], const string2[], bool:ignorecase=false, length=cellmax);
+native strfind(const string[], const sub[], bool:ignorecase=false, index=0);
+
+native strval(const string[], index=0);
+native valstr(dest[], value, bool:pack=true);
+native bool: ispacked(const string[]);
+
+native strformat(dest[], size=sizeof dest, bool:pack=true, const format[], {Fixed,Float,_}:...);
+
+native uudecode(dest[], const source[], maxlength=sizeof dest);
+native uuencode(dest[], const source[], numbytes, maxlength=sizeof dest);
+native memcpy(dest[], const source[], index=0, numbytes, maxlength=sizeof dest);
+
+stock bool: strequal(const string1[], const string2[], bool:ignorecase=false, length=cellmax)
+    return strcmp(string1, string2, ignorecase, length) == 0;
+
+/* Date/time functions
+ *
+ * (c) Copyright 2001-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Time
+
+native gettime(&hour=0, &minute=0, &second=0);
+native settime(hour=cellmin, minute=cellmin, second=cellmin);
+native getdate(&year=0, &month=0, &day=0);
+native setdate(year=cellmin, month=cellmin, day=cellmin);
+
+native settimestamp(seconds1970);
+native cvttimestamp(seconds1970, &year=0, &month=0, &day=0, &hour=0, &minute=0, &second=0);
+
+native settimer(milliseconds, bool: singleshot=false);
+native tickcount(&granularity=0);
+native delay(milliseconds);
+
+forward @timer();
