@@ -1,0 +1,7 @@
+/app/src/build/_deps/picotool/picotool
+/app/src/build/_deps/picotool/picotoolTargets.cmake
+/app/src/build/_deps/picotool/picotoolTargets-release.cmake
+/app/src/build/_deps/picotool/picotoolConfig.cmake
+/app/src/build/_deps/picotool/picotoolConfigVersion.cmake
+/app/src/build/_deps/picotool/enc_bootloader.elf
+/app/src/build/_deps/picotool/enc_bootloader_mbedtls.elf

@@ -10,3 +10,5 @@ Create a scriptable behaviour of the LED PIN on a Seeed RP2040 with PAWN (https:
 # HOWTO
 - Provide an UF2 with every build.
 - Provide a comprehensive "HOWTO_USE.md" for beginners how to install and run the software as well as adapt and update the scripts.
+- Compile the source with every push on every branch.
+- Publish the .uf2 as well as a minimal sample script with every release.

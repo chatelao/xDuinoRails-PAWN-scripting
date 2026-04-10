@@ -1,0 +1,14 @@
+# Target labels
+ picotoolBuild
+# Source files and their labels
+/app/src/build/CMakeFiles/picotoolBuild
+/app/src/build/CMakeFiles/picotoolBuild.rule
+/app/src/build/CMakeFiles/picotoolBuild-complete.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-build.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-configure.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-download.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-install.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-mkdir.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-patch.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-test.rule
+/app/src/build/picotool/src/picotoolBuild-stamp/picotoolBuild-update.rule
