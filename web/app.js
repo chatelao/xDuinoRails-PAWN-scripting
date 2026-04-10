@@ -11,6 +11,30 @@ Blockly.Blocks['pawn_main'] = {
   }
 };
 
+Blockly.Blocks['pawn_on_speed_change'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("onSpeedChange()");
+    this.appendStatementInput("STACK")
+        .setCheck(null);
+    this.setColour(230);
+    this.setTooltip("Event triggered when speed changes");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_on_direction_change'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("onDirectionChange()");
+    this.appendStatementInput("STACK")
+        .setCheck(null);
+    this.setColour(230);
+    this.setTooltip("Event triggered when direction changes");
+    this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['pawn_speed'] = {
   init: function() {
     this.appendDummyInput()
@@ -96,6 +120,16 @@ PawnGenerator.PRECEDENCE = {
 PawnGenerator.forBlock['pawn_main'] = function(block) {
   const stack = PawnGenerator.statementToCode(block, 'STACK');
   return 'main() {\n' + stack + '}\n';
+};
+
+PawnGenerator.forBlock['pawn_on_speed_change'] = function(block) {
+  const stack = PawnGenerator.statementToCode(block, 'STACK');
+  return 'public onSpeedChange() {\n' + stack + '}\n';
+};
+
+PawnGenerator.forBlock['pawn_on_direction_change'] = function(block) {
+  const stack = PawnGenerator.statementToCode(block, 'STACK');
+  return 'public onDirectionChange() {\n' + stack + '}\n';
 };
 
 PawnGenerator.forBlock['pawn_set_led'] = function(block) {
@@ -263,15 +297,33 @@ function generateBlocksFromCode(code) {
     code = code.replace(/native\s+\w+\([^)]*\);/g, '');
 
     // Basic regex-based parser for the most common blocks
-    const mainMatch = code.match(/main\s*\(\s*\)\s*\{([\s\S]*)\}/);
-    if (mainMatch) {
-        const mainBlock = workspace.newBlock('pawn_main');
-        mainBlock.initSvg();
-        mainBlock.render();
+    const functions = [
+        { name: 'main', block: 'pawn_main' },
+        { name: 'onSpeedChange', block: 'pawn_on_speed_change' },
+        { name: 'onDirectionChange', block: 'pawn_on_direction_change' }
+    ];
 
-        const body = mainMatch[1].trim();
-        parseStatements(body, mainBlock.getInput('STACK').connection);
-    }
+    functions.forEach(fn => {
+        const regex = new RegExp('(?:public\\s+)?' + fn.name + '\\s*\\(\\s*\\)\\s*\\{');
+        const match = code.match(regex);
+        if (match) {
+            const startIdx = match.index + match[0].length;
+            let braceCount = 1;
+            let i = startIdx;
+            while (braceCount > 0 && i < code.length) {
+                if (code[i] === '{') braceCount++;
+                else if (code[i] === '}') braceCount--;
+                i++;
+            }
+            if (braceCount === 0) {
+                const body = code.substring(startIdx, i - 1).trim();
+                const block = workspace.newBlock(fn.block);
+                block.initSvg();
+                block.render();
+                parseStatements(body, block.getInput('STACK').connection);
+            }
+        }
+    });
 }
 
 function parseStatements(code, connection) {

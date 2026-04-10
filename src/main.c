@@ -116,6 +116,23 @@ void run_script(void *program, size_t size) {
     free(program_copy);
 }
 
+// Dummy implementation of event handlers (never called)
+void dummy_on_speed_change(AMX *amx) {
+    int index;
+    cell ret;
+    if (amx_FindPublic(amx, "onSpeedChange", &index) == AMX_ERR_NONE) {
+        amx_Exec(amx, &ret, index);
+    }
+}
+
+void dummy_on_direction_change(AMX *amx) {
+    int index;
+    cell ret;
+    if (amx_FindPublic(amx, "onDirectionChange", &index) == AMX_ERR_NONE) {
+        amx_Exec(amx, &ret, index);
+    }
+}
+
 int main() {
     stdio_init_all();
     srand(time_us_64());
