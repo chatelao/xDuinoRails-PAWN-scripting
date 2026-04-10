@@ -41,25 +41,11 @@ jobs:
           cmake ../src -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
           make
 
-      - name: Install Renode
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install robotframework
-          # Install Renode (portable version)
-          RENODE_VER=1.16.1
-          wget https://github.com/renode/renode/releases/download/v${RENODE_VER}/renode-${RENODE_VER}.linux-portable.tar.gz
-          tar -xzf renode-${RENODE_VER}.linux-portable.tar.gz
-          mv renode_${RENODE_VER}_portable renode
-          # Dependencies for portable version on Ubuntu 24.04
-          sudo apt-get install -y libgtk2.0-0 libncurses6 libtinfo6
-
-      - name: Run Renode Tests
-        run: |
-          pip3 install -r renode/tests/requirements.txt
-          # The portable version needs its binaries in the PATH to find its internal files relative to itself
-          export PATH=$GITHUB_WORKSPACE/renode:$PATH
-          renode-test tests/pawn_test.robot
+      - name: Setup Renode
+        uses: antmicro/renode-test-action@v4
+        with:
+          renode-version: '1.16.1'
+          tests-to-run: 'tests/pawn_test.robot'
 
       - name: Upload UF2 Artifact
         uses: actions/upload-artifact@v4
