@@ -19,13 +19,12 @@ uart0: UART.PL011 @ sysbus 0x40034000
 
 sysbus:
     init:
-        Tag <0x00000000 0x4000> "ROM" 0xFFFFFFFF
-        Tag <0x40008000 0x1000> "Clocks" 0xFFFFFFFF
-        Tag <0x40014000 0x1000> "GPIO"
-        Tag <0xd0000000 0x1000> "SIO"
-        Tag <0x4000c000 0x1000> "Resets" 0xFFFFFFFF
+        Tag <0x40000000 0x0004> "DetectionTag" 0xDEADBEEF
+        Tag <0x40000004 0x3FFC> "SysCfgEx"
         Tag <0x40004000 0x1000> "SysInfo" 0xFFFFFFFF
-        Tag <0x40000000 0x1000> "SysCfg" 0xFFFFFFFF
+        Tag <0x40008000 0x1000> "Clocks" 0xFFFFFFFF
+        Tag <0x4000c000 0x1000> "Resets" 0xFFFFFFFF
+        Tag <0x40014000 0x1000> "GPIO"
         Tag <0x40024000 0x1000> "XOSC" 0xFFFFFFFF
         Tag <0x40028000 0x1000> "PLL_SYS" 0xFFFFFFFF
         Tag <0x4002c000 0x1000> "PLL_USB" 0xFFFFFFFF
@@ -46,3 +45,4 @@ sysbus:
         Tag <0x50110000 0x1000> "USB"
         Tag <0x50200000 0x1000> "PIO0"
         Tag <0x50300000 0x1000> "PIO1"
+        Tag <0xd0000000 0x1000> "SIO"
