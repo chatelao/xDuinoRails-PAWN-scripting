@@ -47,9 +47,9 @@ jobs:
           sudo apt-get install -y python3-pip
           pip3 install --user robotframework
           # Install Renode
-          wget https://github.com/renode/renode/releases/download/v1.15.3/renode_1.15.3_amd64.deb
-          sudo apt-get install -y ./renode_1.15.3_amd64.deb
-          rm renode_1.15.3_amd64.deb
+          wget https://builds.antmicro.com/renode/nightly/renode-latest.deb
+          sudo apt-get install -y ./renode-latest.deb
+          rm renode-latest.deb
 
       - name: Run Renode Tests
         run: |
