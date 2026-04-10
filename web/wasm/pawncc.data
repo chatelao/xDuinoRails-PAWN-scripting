@@ -1,169 +1,35 @@
-/* An assortment of additional functions in the DLL version of the
- * Abstract Machine.
+/* String functions
  *
- * (c) Copyright 2000-2011, CompuPhase
+ * (c) Copyright 2005-2012, CompuPhase
  * This file is provided as is (no warranties).
  */
+#pragma library String
 
-enum
-    {
-    Ok,
-    Okcancel,
-    okCancel,
-    Yesno,
-    yesNo,
-    Yesnocancel,
-    yesNocancel,
-    yesnoCancel,
-    }
-enum
-    {
-    noicon,
-    information,
-    exclamation,
-    question,
-    stop
-    }
-native messagebox(const message[], const caption[], buttons=Ok, icons=noicon, timeout=0);
+native strlen(const string[]);
+native strpack(dest[], const source[], maxlength=sizeof dest);
+native strunpack(dest[], const source[], maxlength=sizeof dest);
+native strcopy(dest[], const source[], maxlength=sizeof dest);
+native strcat(dest[], const source[], maxlength=sizeof dest);
 
-/* Types:
- *    i = integer (16/32 bit)
- *    l = 32-bit integer
- *    h = handle (16/32 bit)
- *    p = packed string
- *    s = (unpacked) string
- *    w = 16-bit unsigned integer
- * lower case = by value, upper case = by reference
- *
- * The types noted as "16/32 bit" are converted to 16-bit in Win16 environments
- * prior to the call to the DLL.
- *
- * calldll() attaches "32" to the dll name if it cannot load the DLL as you
- * provide it. So it loads "user32" if you specify "user" and you are in Win32.
- * calldll() also appends a "A" to the function name if it cannot find the
- * function as specified. So it call "GetWindowTextA" if you ask for
- * "GetWindowText". By this means, the interface is more compatible between
- * 16-bit and 32-bit platforms.
- */
-native calldll(const dllname[], const function[], const typestr[]="", ...);
+native strmid(dest[], const source[], start=0, end=cellmax, maxlength=sizeof dest);
+native bool: strins(string[], const substr[], index, maxlength=sizeof string);
+native bool: strdel(string[], start, end);
 
-native loaddll(const dllname[]);
-native freedll(const dllname[]);
+native strcmp(const string1[], const string2[], bool:ignorecase=false, length=cellmax);
+native strfind(const string[], const sub[], bool:ignorecase=false, index=0);
 
-native iswin32();
+native strval(const string[], index=0);
+native valstr(dest[], value, bool:pack=true);
+native bool: ispacked(const string[]);
 
-native balloon(&Balloon:handle, text[]="", x=0, y=0, timeout=-1);
-native balloonfont(&Balloon:handle, const font[]="", height=16, weight=400, italic=0);
+native strformat(dest[], size=sizeof dest, bool:pack=true, const format[], {Fixed,Float,_}:...);
 
-stock wGetCursorPos(&x, &y)
-    /* Get the current position of the mouse cursor relative to the upper
-     * left corner of the screen
-     */
-    {
-    new point[2]
-    calldll(!"user","GetCursorPos","I",point)
-    if (!iswin32())
-        {
-        point[1] = point[0] >> 16
-        point[0] &= 0xffff
-        }
-    x = point[0]
-    y = point[1]
-    }
+native uudecode(dest[], const source[], maxlength=sizeof dest);
+native uuencode(dest[], const source[], numbytes, maxlength=sizeof dest);
+native memcpy(dest[], const source[], index=0, numbytes, maxlength=sizeof dest);
 
-
-/* Script Arguments support functions
- *
- * (c) Copyright 2005-2011, CompuPhase
- * This file is provided as is (no warranties).
- */
-#pragma library Args
-
-native argcount();
-native bool: argindex(index, value[], maxlength = sizeof value, bool: pack = true);
-native bool: argstr(index = 0, const option[] = ``'', value[] = ``'', maxlength = sizeof value, bool: pack = true);
-native bool: argvalue(index = 0, const option[] = ``'', &value = cellmin);
-/* Minimalistic wrapper for the "Better String library" by Paul Hsieh
- *
- * (c) Copyright 2004-2011, CompuPhase
- * This file is provided as is (no warranties).
- */
-#pragma library BString
-
-/* native functions */
-native String: bstring(const source[] = ``'');
-native String: bstrdup(String: source);
-native String: bstrcat(String: target, String: source);
-native         bstrlen(String: source);
-native String: bstrmid(String: source, start = 0, length = cellmax);
-native         bstrtoarray(target[], size = sizeof target, String: source,
-                           bool: packed = true);
-
-/* user-defined operators */
-native String:operator=(String:oper) = bstrdup;
-native String:operator+(String:oper1, String:oper2) = bstrcat;
-/* Console input/output functions
- *
- * (c) Copyright 1998-2011, CompuPhase
- * This file is provided as is (no warranties).
- */
-#pragma library Console
-
-const
-    {
-    black = 0,  /* colours as per the ANSI Escape sequences, ISO 6429 */
-    red,
-    green,
-    yellow,
-    blue,
-    magenta,
-    cyan,
-    white,
-    };
-
-native getchar(echo=true);
-native getstring(string[], maxlength=sizeof string, bool:pack=true);
-native getvalue(base=10, term=0x0d, ...);    /* 0x0d == '\r' */
-native print(const string[], foreground=-1, background=-1, highlight=-1);
-native printf(const format[], {Float,Fixed,_}:...);
-
-native console(columns, lines);
-native clrscr();        /* also resets the cursor to (1,1) */
-native clreol();
-native gotoxy(x=1, y=1);
-native wherexy(&x, &y);
-native setattr(foreground=-1, background=-1, highlight=-1);
-
-forward @keypressed(key);
-/* Core functions
- *
- * (c) Copyright 1998-2011, CompuPhase
- * This file is provided as is (no warranties).
- */
-#pragma library Core
-
-native heapspace();
-
-native funcidx(const name[]);
-
-native numargs();
-native getarg(arg, index=0);
-native setarg(arg, index=0, value);
-
-native tolower(c);
-native toupper(c);
-native swapchars(c);
-
-native random(max);
-
-native min(value1, value2);
-native max(value1, value2);
-native clamp(value, min=cellmin, max=cellmax);
-
-native getproperty(id=0, const name[]=``'', value=cellmin, string[]=``'', size=sizeof string);
-native setproperty(id=0, const name[]=``'', value=cellmin, const string[]=``'');
-native deleteproperty(id=0, const name[]=``'', value=cellmin);
-native existproperty(id=0, const name[]=``'', value=cellmin);
+stock bool: strequal(const string1[], const string2[], bool:ignorecase=false, length=cellmax)
+    return strcmp(string1, string2, ignorecase, length) == 0;
 
 /* Datagram sending/receiving
  *
@@ -179,151 +45,6 @@ native listenport(port);
 
 forward @receivestring(const message[], const source[]);
 forward @receivepacket(const packet[], size, const source[]);
-#include <core>
-#include <console>
-/* File input/output functions
- *
- * (c) Copyright 2004-2011, CompuPhase
- * This file is provided as is (no warranties).
- */
-#pragma library File
-
-const filemode:
-    {
-    io_read = 0,        /* file must exist */
-    io_write,           /* creates a new file */
-    io_readwrite,       /* opens an existing file, or creates a new file */
-    io_append,          /* appends to file (write-only) */
-    };
-
-const seek_whence:
-    {
-    seek_start = 0,
-    seek_current,
-    seek_end,
-    };
-
-const EOF = -1;
-
-native File: fopen(const name[], filemode: mode = io_readwrite);
-native bool: fclose(File: handle);
-native File: ftemp();
-native bool: fremove(const name[]);
-native bool: fcopy(const source[], const target[]);
-native bool: frename(const oldname[], const newname[]);
-native bool: fcreatedir(const name[]);
-
-native       fwrite(File: handle, const string[]);
-native       fread(File: handle, string[], size = sizeof string, bool: pack = true);
-native bool: fputchar(File: handle, value, bool: utf8 = true);
-native       fgetchar(File: handle, bool: utf8 = true);
-native       fblockwrite(File: handle, const buffer[], size = sizeof buffer);
-native       fblockread(File: handle, buffer[], size = sizeof buffer);
-
-native       fseek(File: handle, position = 0, seek_whence: whence = seek_start);
-native       flength(File: handle);
-native       fexist(const pattern[]);
-native bool: fmatch(name[], const pattern[], index = 0, size = sizeof name);
-native bool: fstat(name[], &size = 0, &timestamp = 0, &mode = 0, &inode = 0);
-native bool: fattrib(const name[], timestamp=0, attrib=0x0f);
-native       filecrc(const name[]);
-
-native       readcfg(const filename[]=``'', const section[]=``'', const key[], value[], size=sizeof value, const defvalue[]=``'', bool:pack=true);
-native       readcfgvalue(const filename[]=``'', const section[]=``'', const key[], defvalue=0);
-native bool: writecfg(const filename[]=``'', const section[]=``'', const key[], const value[]);
-native bool: writecfgvalue(const filename[]=``'', const section[]=``'', const key[], value);
-native bool: deletecfg(const filename[]=``'', const section[]=``'', const key[]=``'');
-/* Fixed point arithmetic
- *
- * (c) Copyright 1998-2011, CompuPhase
- * This file is provided as is (no warranties).
- */
-#pragma library Fixed
-
-const fround_method: {
-  fround_round = 0,
-  fround_floor,
-  fround_ceil,
-  fround_tozero,
-  fround_unbiased
-};
-
-native Fixed:fixed(value);
-native Fixed:strfixed(const string[]);
-native Fixed:fmul(Fixed:oper1, Fixed:oper2);
-native Fixed:fdiv(Fixed:dividend, Fixed:divisor);
-native Fixed:ffract(Fixed:value);
-native       fround(Fixed:value, fround_method:method=fround_round);
-native Fixed:fpower(Fixed:value, exponent);
-native Fixed:fsqroot(Fixed:value);
-native Fixed:fabs(Fixed:value);
-
-#pragma rational Fixed(3)
-
-/* user defined operators */
-native Fixed:operator*(Fixed:oper1, Fixed:oper2) = fmul;
-native Fixed:operator/(Fixed:oper1, Fixed:oper2) = fdiv;
-native Fixed:operator=(oper) = fixed;
-
-stock Fixed:operator++(Fixed:oper)
-    return oper + fixed(1);
-
-stock Fixed:operator--(Fixed:oper)
-    return oper - fixed(1);
-
-stock Fixed:operator*(Fixed:oper1, oper2)
-    return Fixed: (_:oper1 * oper2);            /* "*" is commutative */
-
-stock Fixed:operator/(Fixed:oper1, oper2)
-    return oper1 / fixed(oper2);
-
-stock Fixed:operator/(oper1, Fixed:oper2)
-    return fdiv(fixed(oper1), oper2);
-
-stock Fixed:operator+(Fixed:oper1, oper2)
-    return oper1 + fixed(oper2);                /* "+" is commutative */
-
-stock Fixed:operator-(Fixed:oper1, oper2)
-    return oper1 - fixed(oper2);
-
-stock Fixed:operator-(oper1, Fixed:oper2)
-    return fixed(oper1) - oper2;
-
-stock bool:operator>(Fixed:oper1, oper2)
-    return oper1 > fixed(oper2);
-
-stock bool:operator>(oper1, Fixed:oper2)
-    return fixed(oper1) > oper2;
-
-stock bool:operator>=(Fixed:oper1, oper2)
-    return oper1 >= fixed(oper2);
-
-stock bool:operator>=(oper1, Fixed:oper2)
-    return fixed(oper1) >= oper2;
-
-stock bool:operator<(Fixed:oper1, oper2)
-    return oper1 < fixed(oper2);
-
-stock bool:operator<(oper1, Fixed:oper2)
-    return fixed(oper1) < oper2;
-
-stock bool:operator<=(Fixed:oper1, oper2)
-    return oper1 <= fixed(oper2);
-
-stock bool:operator<=(oper1, Fixed:oper2)
-    return fixed(oper1) <= oper2;
-
-stock bool:operator==(Fixed:oper1, oper2)       /* "==" is commutative */
-    return oper1 == fixed(oper2);
-
-stock bool:operator!=(Fixed:oper1, oper2)       /* "!=" is commutative */
-    return oper1 != fixed(oper2);
-
-/* forbidden operations */
-forward operator%(Fixed:oper1, Fixed:oper2);
-forward operator%(Fixed:oper1, oper2);
-forward operator%(oper1, Fixed:oper2);
-
 /* Float arithmetic
  *
  * (c) Copyright 1999, Artran, Inc.
@@ -504,6 +225,256 @@ forward operator%(Float:oper1, Float:oper2);
 forward operator%(Float:oper1, oper2);
 forward operator%(oper1, Float:oper2);
 
+/* Fixed point arithmetic
+ *
+ * (c) Copyright 1998-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Fixed
+
+const fround_method: {
+  fround_round = 0,
+  fround_floor,
+  fround_ceil,
+  fround_tozero,
+  fround_unbiased
+};
+
+native Fixed:fixed(value);
+native Fixed:strfixed(const string[]);
+native Fixed:fmul(Fixed:oper1, Fixed:oper2);
+native Fixed:fdiv(Fixed:dividend, Fixed:divisor);
+native Fixed:ffract(Fixed:value);
+native       fround(Fixed:value, fround_method:method=fround_round);
+native Fixed:fpower(Fixed:value, exponent);
+native Fixed:fsqroot(Fixed:value);
+native Fixed:fabs(Fixed:value);
+
+#pragma rational Fixed(3)
+
+/* user defined operators */
+native Fixed:operator*(Fixed:oper1, Fixed:oper2) = fmul;
+native Fixed:operator/(Fixed:oper1, Fixed:oper2) = fdiv;
+native Fixed:operator=(oper) = fixed;
+
+stock Fixed:operator++(Fixed:oper)
+    return oper + fixed(1);
+
+stock Fixed:operator--(Fixed:oper)
+    return oper - fixed(1);
+
+stock Fixed:operator*(Fixed:oper1, oper2)
+    return Fixed: (_:oper1 * oper2);            /* "*" is commutative */
+
+stock Fixed:operator/(Fixed:oper1, oper2)
+    return oper1 / fixed(oper2);
+
+stock Fixed:operator/(oper1, Fixed:oper2)
+    return fdiv(fixed(oper1), oper2);
+
+stock Fixed:operator+(Fixed:oper1, oper2)
+    return oper1 + fixed(oper2);                /* "+" is commutative */
+
+stock Fixed:operator-(Fixed:oper1, oper2)
+    return oper1 - fixed(oper2);
+
+stock Fixed:operator-(oper1, Fixed:oper2)
+    return fixed(oper1) - oper2;
+
+stock bool:operator>(Fixed:oper1, oper2)
+    return oper1 > fixed(oper2);
+
+stock bool:operator>(oper1, Fixed:oper2)
+    return fixed(oper1) > oper2;
+
+stock bool:operator>=(Fixed:oper1, oper2)
+    return oper1 >= fixed(oper2);
+
+stock bool:operator>=(oper1, Fixed:oper2)
+    return fixed(oper1) >= oper2;
+
+stock bool:operator<(Fixed:oper1, oper2)
+    return oper1 < fixed(oper2);
+
+stock bool:operator<(oper1, Fixed:oper2)
+    return fixed(oper1) < oper2;
+
+stock bool:operator<=(Fixed:oper1, oper2)
+    return oper1 <= fixed(oper2);
+
+stock bool:operator<=(oper1, Fixed:oper2)
+    return fixed(oper1) <= oper2;
+
+stock bool:operator==(Fixed:oper1, oper2)       /* "==" is commutative */
+    return oper1 == fixed(oper2);
+
+stock bool:operator!=(Fixed:oper1, oper2)       /* "!=" is commutative */
+    return oper1 != fixed(oper2);
+
+/* forbidden operations */
+forward operator%(Fixed:oper1, Fixed:oper2);
+forward operator%(Fixed:oper1, oper2);
+forward operator%(oper1, Fixed:oper2);
+
+/* File input/output functions
+ *
+ * (c) Copyright 2004-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library File
+
+const filemode:
+    {
+    io_read = 0,        /* file must exist */
+    io_write,           /* creates a new file */
+    io_readwrite,       /* opens an existing file, or creates a new file */
+    io_append,          /* appends to file (write-only) */
+    };
+
+const seek_whence:
+    {
+    seek_start = 0,
+    seek_current,
+    seek_end,
+    };
+
+const EOF = -1;
+
+native File: fopen(const name[], filemode: mode = io_readwrite);
+native bool: fclose(File: handle);
+native File: ftemp();
+native bool: fremove(const name[]);
+native bool: fcopy(const source[], const target[]);
+native bool: frename(const oldname[], const newname[]);
+native bool: fcreatedir(const name[]);
+
+native       fwrite(File: handle, const string[]);
+native       fread(File: handle, string[], size = sizeof string, bool: pack = true);
+native bool: fputchar(File: handle, value, bool: utf8 = true);
+native       fgetchar(File: handle, bool: utf8 = true);
+native       fblockwrite(File: handle, const buffer[], size = sizeof buffer);
+native       fblockread(File: handle, buffer[], size = sizeof buffer);
+
+native       fseek(File: handle, position = 0, seek_whence: whence = seek_start);
+native       flength(File: handle);
+native       fexist(const pattern[]);
+native bool: fmatch(name[], const pattern[], index = 0, size = sizeof name);
+native bool: fstat(name[], &size = 0, &timestamp = 0, &mode = 0, &inode = 0);
+native bool: fattrib(const name[], timestamp=0, attrib=0x0f);
+native       filecrc(const name[]);
+
+native       readcfg(const filename[]=``'', const section[]=``'', const key[], value[], size=sizeof value, const defvalue[]=``'', bool:pack=true);
+native       readcfgvalue(const filename[]=``'', const section[]=``'', const key[], defvalue=0);
+native bool: writecfg(const filename[]=``'', const section[]=``'', const key[], const value[]);
+native bool: writecfgvalue(const filename[]=``'', const section[]=``'', const key[], value);
+native bool: deletecfg(const filename[]=``'', const section[]=``'', const key[]=``'');
+/* Console input/output functions
+ *
+ * (c) Copyright 1998-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Console
+
+const
+    {
+    black = 0,  /* colours as per the ANSI Escape sequences, ISO 6429 */
+    red,
+    green,
+    yellow,
+    blue,
+    magenta,
+    cyan,
+    white,
+    };
+
+native getchar(echo=true);
+native getstring(string[], maxlength=sizeof string, bool:pack=true);
+native getvalue(base=10, term=0x0d, ...);    /* 0x0d == '\r' */
+native print(const string[], foreground=-1, background=-1, highlight=-1);
+native printf(const format[], {Float,Fixed,_}:...);
+
+native console(columns, lines);
+native clrscr();        /* also resets the cursor to (1,1) */
+native clreol();
+native gotoxy(x=1, y=1);
+native wherexy(&x, &y);
+native setattr(foreground=-1, background=-1, highlight=-1);
+
+forward @keypressed(key);
+/* An assortment of additional functions in the DLL version of the
+ * Abstract Machine.
+ *
+ * (c) Copyright 2000-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+
+enum
+    {
+    Ok,
+    Okcancel,
+    okCancel,
+    Yesno,
+    yesNo,
+    Yesnocancel,
+    yesNocancel,
+    yesnoCancel,
+    }
+enum
+    {
+    noicon,
+    information,
+    exclamation,
+    question,
+    stop
+    }
+native messagebox(const message[], const caption[], buttons=Ok, icons=noicon, timeout=0);
+
+/* Types:
+ *    i = integer (16/32 bit)
+ *    l = 32-bit integer
+ *    h = handle (16/32 bit)
+ *    p = packed string
+ *    s = (unpacked) string
+ *    w = 16-bit unsigned integer
+ * lower case = by value, upper case = by reference
+ *
+ * The types noted as "16/32 bit" are converted to 16-bit in Win16 environments
+ * prior to the call to the DLL.
+ *
+ * calldll() attaches "32" to the dll name if it cannot load the DLL as you
+ * provide it. So it loads "user32" if you specify "user" and you are in Win32.
+ * calldll() also appends a "A" to the function name if it cannot find the
+ * function as specified. So it call "GetWindowTextA" if you ask for
+ * "GetWindowText". By this means, the interface is more compatible between
+ * 16-bit and 32-bit platforms.
+ */
+native calldll(const dllname[], const function[], const typestr[]="", ...);
+
+native loaddll(const dllname[]);
+native freedll(const dllname[]);
+
+native iswin32();
+
+native balloon(&Balloon:handle, text[]="", x=0, y=0, timeout=-1);
+native balloonfont(&Balloon:handle, const font[]="", height=16, weight=400, italic=0);
+
+stock wGetCursorPos(&x, &y)
+    /* Get the current position of the mouse cursor relative to the upper
+     * left corner of the screen
+     */
+    {
+    new point[2]
+    calldll(!"user","GetCursorPos","I",point)
+    if (!iswin32())
+        {
+        point[1] = point[0] >> 16
+        point[0] &= 0xffff
+        }
+    x = point[0]
+    y = point[1]
+    }
+
+
 /* Process control and Foreign Function Interface (calling functions
  * in DLLs or shared libraries)
  *
@@ -519,6 +490,69 @@ native PID:  procexec(const progname[]);
 native       procwait(PID:pid);
 native bool: procwrite(const line[], bool:appendlf=false);
 native bool: procread(line[], size=sizeof line, bool:striplf=false, bool:packed = true);
+/* Core functions
+ *
+ * (c) Copyright 1998-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Core
+
+native heapspace();
+
+native funcidx(const name[]);
+
+native numargs();
+native getarg(arg, index=0);
+native setarg(arg, index=0, value);
+
+native tolower(c);
+native toupper(c);
+native swapchars(c);
+
+native random(max);
+
+native min(value1, value2);
+native max(value1, value2);
+native clamp(value, min=cellmin, max=cellmax);
+
+native getproperty(id=0, const name[]=``'', value=cellmin, string[]=``'', size=sizeof string);
+native setproperty(id=0, const name[]=``'', value=cellmin, const string[]=``'');
+native deleteproperty(id=0, const name[]=``'', value=cellmin);
+native existproperty(id=0, const name[]=``'', value=cellmin);
+
+/* Date/time functions
+ *
+ * (c) Copyright 2001-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Time
+
+native gettime(&hour=0, &minute=0, &second=0);
+native settime(hour=cellmin, minute=cellmin, second=cellmin);
+native getdate(&year=0, &month=0, &day=0);
+native setdate(year=cellmin, month=cellmin, day=cellmin);
+
+native settimestamp(seconds1970);
+native cvttimestamp(seconds1970, &year=0, &month=0, &day=0, &hour=0, &minute=0, &second=0);
+
+native settimer(milliseconds, bool: singleshot=false);
+native tickcount(&granularity=0);
+native delay(milliseconds);
+
+forward @timer();
+#include <core>
+#include <console>
+/* Script Arguments support functions
+ *
+ * (c) Copyright 2005-2011, CompuPhase
+ * This file is provided as is (no warranties).
+ */
+#pragma library Args
+
+native argcount();
+native bool: argindex(index, value[], maxlength = sizeof value, bool: pack = true);
+native bool: argstr(index = 0, const option[] = ``'', value[] = ``'', maxlength = sizeof value, bool: pack = true);
+native bool: argvalue(index = 0, const option[] = ``'', &value = cellmin);
 /* Rational number support
  * Loads either Float.inc or Fixed.inc, depending on the configuration
  *
@@ -569,56 +603,22 @@ native bool: procread(line[], size=sizeof line, bool:striplf=false, bool:packed 
 /* if arrived here, neither floating point, nor fixed point support is available */
 #error Rational number support is unavailable (disabled or not installed)
 
-/* String functions
+/* Minimalistic wrapper for the "Better String library" by Paul Hsieh
  *
- * (c) Copyright 2005-2012, CompuPhase
+ * (c) Copyright 2004-2011, CompuPhase
  * This file is provided as is (no warranties).
  */
-#pragma library String
+#pragma library BString
 
-native strlen(const string[]);
-native strpack(dest[], const source[], maxlength=sizeof dest);
-native strunpack(dest[], const source[], maxlength=sizeof dest);
-native strcopy(dest[], const source[], maxlength=sizeof dest);
-native strcat(dest[], const source[], maxlength=sizeof dest);
+/* native functions */
+native String: bstring(const source[] = ``'');
+native String: bstrdup(String: source);
+native String: bstrcat(String: target, String: source);
+native         bstrlen(String: source);
+native String: bstrmid(String: source, start = 0, length = cellmax);
+native         bstrtoarray(target[], size = sizeof target, String: source,
+                           bool: packed = true);
 
-native strmid(dest[], const source[], start=0, end=cellmax, maxlength=sizeof dest);
-native bool: strins(string[], const substr[], index, maxlength=sizeof string);
-native bool: strdel(string[], start, end);
-
-native strcmp(const string1[], const string2[], bool:ignorecase=false, length=cellmax);
-native strfind(const string[], const sub[], bool:ignorecase=false, index=0);
-
-native strval(const string[], index=0);
-native valstr(dest[], value, bool:pack=true);
-native bool: ispacked(const string[]);
-
-native strformat(dest[], size=sizeof dest, bool:pack=true, const format[], {Fixed,Float,_}:...);
-
-native uudecode(dest[], const source[], maxlength=sizeof dest);
-native uuencode(dest[], const source[], numbytes, maxlength=sizeof dest);
-native memcpy(dest[], const source[], index=0, numbytes, maxlength=sizeof dest);
-
-stock bool: strequal(const string1[], const string2[], bool:ignorecase=false, length=cellmax)
-    return strcmp(string1, string2, ignorecase, length) == 0;
-
-/* Date/time functions
- *
- * (c) Copyright 2001-2011, CompuPhase
- * This file is provided as is (no warranties).
- */
-#pragma library Time
-
-native gettime(&hour=0, &minute=0, &second=0);
-native settime(hour=cellmin, minute=cellmin, second=cellmin);
-native getdate(&year=0, &month=0, &day=0);
-native setdate(year=cellmin, month=cellmin, day=cellmin);
-
-native settimestamp(seconds1970);
-native cvttimestamp(seconds1970, &year=0, &month=0, &day=0, &hour=0, &minute=0, &second=0);
-
-native settimer(milliseconds, bool: singleshot=false);
-native tickcount(&granularity=0);
-native delay(milliseconds);
-
-forward @timer();
+/* user-defined operators */
+native String:operator=(String:oper) = bstrdup;
+native String:operator+(String:oper1, String:oper2) = bstrcat;
