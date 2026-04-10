@@ -230,6 +230,62 @@ main() {
     expect(textValue).toBe('Revised Print');
   });
 
+  test('should generate CV(n) code from blockly', async ({ page }) => {
+    const toggleBtn = page.locator('#toggle-editor');
+    const editor = page.locator('#editor');
+
+    // Switch to Blockly mode
+    await toggleBtn.click();
+
+    await page.evaluate(() => {
+        // @ts-ignore
+        const ws = Blockly.getMainWorkspace();
+        ws.clear();
+        // @ts-ignore
+        const mainBlock = ws.newBlock('pawn_main');
+        mainBlock.initSvg();
+        mainBlock.render();
+
+        // @ts-ignore
+        const cvBlock = ws.newBlock('pawn_cv');
+        // @ts-ignore
+        const numBlock = ws.newBlock('math_number');
+        numBlock.setFieldValue('5', 'NUM');
+        numBlock.initSvg();
+        numBlock.render();
+        cvBlock.getInput('NUM').connection.connect(numBlock.outputConnection);
+        cvBlock.initSvg();
+        cvBlock.render();
+
+        // Connect CV block to something, or just generate code from it
+        // Since CV is an expression, let's put it inside set_led for a better test
+        // @ts-ignore
+        const ledBlock = ws.newBlock('pawn_set_led');
+        ledBlock.initSvg();
+        ledBlock.render();
+
+        // Wait, pawn_set_led in this project uses a dropdown for STATUS, not a value input.
+        // Let's use delay which DOES take a value input.
+        // @ts-ignore
+        const delayBlock = ws.newBlock('pawn_delay');
+        delayBlock.initSvg();
+        delayBlock.render();
+
+        delayBlock.getInput('MS').connection.connect(cvBlock.outputConnection);
+
+        const connection = mainBlock.getInput('STACK').connection;
+        connection.connect(delayBlock.previousConnection);
+    });
+
+    // Switch back to Code
+    await toggleBtn.click();
+
+    // Verify editor has the code
+    const code = await editor.inputValue();
+    expect(code).toContain('native CV(id);');
+    expect(code).toContain('delay(CV(5));');
+  });
+
   test('should copy between editors using buttons', async ({ page }) => {
     const editor = page.locator('#editor');
     const copyToCodeBtn = page.locator('#copy-to-code');

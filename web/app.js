@@ -52,6 +52,18 @@ Blockly.Blocks['pawn_print'] = {
   }
 };
 
+Blockly.Blocks['pawn_cv'] = {
+  init: function() {
+    this.appendValueInput("NUM")
+        .setCheck("Number")
+        .appendField("CV");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns random 0..255 value for a given CV number");
+    this.setHelpUrl("");
+  }
+};
+
 // PAWN Generator
 const PawnGenerator = new Blockly.Generator('PAWN');
 
@@ -77,6 +89,11 @@ PawnGenerator.forBlock['pawn_delay'] = function(block) {
 PawnGenerator.forBlock['pawn_print'] = function(block) {
   const text = PawnGenerator.valueToCode(block, 'TEXT', PawnGenerator.PRECEDENCE.ATOMIC) || '""';
   return 'print(' + text + ');\n';
+};
+
+PawnGenerator.forBlock['pawn_cv'] = function(block) {
+  const num = PawnGenerator.valueToCode(block, 'NUM', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  return ['CV(' + num + ')', PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
 PawnGenerator.forBlock['text'] = function(block) {
@@ -206,7 +223,8 @@ function generatePawnCode() {
         log('Error generating code: ' + e);
     }
     return 'native set_led(status);\n' +
-           'native delay(ms);\n\n' +
+           'native delay(ms);\n' +
+           'native CV(id);\n\n' +
            generatedCode;
 }
 
@@ -250,6 +268,20 @@ function parseStatements(code, connection) {
             block.render();
             currentConnection.connect(block.previousConnection);
             currentConnection = block.nextConnection;
+            remaining = remaining.substring(match[0].length).trim();
+        }
+        // CV(n)
+        else if (match = remaining.match(/^CV\((\d+)\);/)) {
+            const block = workspace.newBlock('pawn_cv');
+            const numBlock = workspace.newBlock('math_number');
+            numBlock.setFieldValue(match[1], 'NUM');
+            numBlock.initSvg();
+            numBlock.render();
+            block.getInput('NUM').connection.connect(numBlock.outputConnection);
+            block.initSvg();
+            block.render();
+            // Since pawn_cv is an expression block, it won't connect to the statement chain,
+            // but we parse it to avoid errors and show it in the workspace.
             remaining = remaining.substring(match[0].length).trim();
         }
         // print("text")
