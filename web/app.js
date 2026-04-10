@@ -181,8 +181,6 @@ PawnGenerator.scrub_ = function(block, code, opt_thisOnly) {
 
 const compileBtn = document.getElementById('compile-btn');
 const loadBtn = document.getElementById('load-btn');
-const copyToCodeBtn = document.getElementById('copy-to-code');
-const copyToBlocksBtn = document.getElementById('copy-to-blocks');
 const toggleBtn = document.getElementById('toggle-editor');
 const fileInput = document.getElementById('file-input');
 const downloadLink = document.getElementById('download-link');
@@ -487,18 +485,6 @@ toggleBtn.addEventListener('click', () => {
     }
 });
 
-copyToCodeBtn.addEventListener('click', () => {
-    const code = generatePawnCode();
-    editor.value = code;
-    lastGeneratedCode = code;
-    log('Copied Blockly to Code.');
-});
-
-copyToBlocksBtn.addEventListener('click', () => {
-    const currentCode = editor.value;
-    generateBlocksFromCode(currentCode);
-    log('Copied Code to Blockly.');
-});
 
 function log(text) {
     consoleArea.textContent += text + '\n';

@@ -230,15 +230,15 @@ main() {
     expect(textValue).toBe('Revised Print');
   });
 
-  test('should copy between editors using buttons', async ({ page }) => {
+  test('should synchronize between editors when switching', async ({ page }) => {
+    const toggleBtn = page.locator('#toggle-editor');
     const editor = page.locator('#editor');
-    const copyToCodeBtn = page.locator('#copy-to-code');
-    const copyToBlocksBtn = page.locator('#copy-to-blocks');
 
-    // 1. Blockly -> Code
+    // 1. Blockly -> Code synchronization
+    await toggleBtn.click(); // Switch to Blocks
     await page.evaluate(() => {
         // @ts-ignore
-        const ws = Blockly.getMainWorkspace() || Blockly.inject('blockly-div', { toolbox: document.getElementById('toolbox') });
+        const ws = Blockly.getMainWorkspace();
         ws.clear();
         // @ts-ignore
         const mainBlock = ws.newBlock('pawn_main');
@@ -252,17 +252,21 @@ main() {
         mainBlock.getInput('STACK').connection.connect(ledBlock.previousConnection);
     });
 
-    await copyToCodeBtn.click();
+    await toggleBtn.click(); // Switch to Code
     let code = await editor.inputValue();
     expect(code).toContain('set_led(1);');
 
-    // 2. Code -> Blockly
+    // 2. Code -> Blockly synchronization
     await editor.fill('main() { set_led(0); }');
-    await copyToBlocksBtn.click();
 
-    // Wait a bit for blocks to be generated
-    await page.waitForTimeout(500);
+    // Switch to Blocks (should trigger sync)
+    // First, it might ask for confirmation because editor.value != lastGeneratedCode
+    page.once('dialog', async dialog => {
+      await dialog.accept();
+    });
+    await toggleBtn.click();
 
+    // Verify blocks were updated
     const ledStatus = await page.evaluate(() => {
         // @ts-ignore
         const ws = Blockly.getMainWorkspace();
