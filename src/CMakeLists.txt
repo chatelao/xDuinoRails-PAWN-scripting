@@ -28,5 +28,9 @@ target_include_directories(pawn_led PRIVATE
 
 target_link_libraries(pawn_led pico_stdlib hardware_gpio)
 
+# Enable USB and UART stdio
+pico_enable_stdio_usb(pawn_led 1)
+pico_enable_stdio_uart(pawn_led 1)
+
 # Enable extra outputs (bin, hex, uf2)
 pico_add_extra_outputs(pawn_led)

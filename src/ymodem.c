@@ -22,6 +22,14 @@
 
 #define MAX_ERRORS 10
 
+typedef enum {
+    RES_OK,
+    RES_EOT,
+    RES_CAN,
+    RES_TIMEOUT,
+    RES_ERROR
+} receive_res_t;
+
 static uint16_t crc16_ccitt(const uint8_t *buf, int len) {
     uint16_t crc = 0;
     while (len--) {
@@ -37,11 +45,11 @@ static uint16_t crc16_ccitt(const uint8_t *buf, int len) {
     return crc;
 }
 
-static int receive_packet(uint8_t *data, int *length, uint32_t timeout) {
+static receive_res_t receive_packet(uint8_t *data, int *length, uint8_t *seqno, uint32_t timeout) {
     int c;
     *length = 0;
     c = getchar_timeout_us(timeout);
-    if (c < 0) return -1;
+    if (c < 0) return RES_TIMEOUT;
 
     switch (c) {
         case SOH:
@@ -51,38 +59,40 @@ static int receive_packet(uint8_t *data, int *length, uint32_t timeout) {
             *length = PACKET_1K_SIZE;
             break;
         case EOT:
-            return EOT;
+            return RES_EOT;
         case CAN:
-            if (getchar_timeout_us(timeout) == CAN) return CAN;
-            return -1;
+            if (getchar_timeout_us(timeout) == CAN) return RES_CAN;
+            return RES_ERROR;
         default:
-            return -1;
+            return RES_ERROR;
     }
 
     uint8_t packet[PACKET_1K_SIZE + PACKET_OVERHEAD];
-    packet[0] = c;
+    packet[0] = (uint8_t)c;
     for (int i = 1; i < (*length + PACKET_OVERHEAD); i++) {
         c = getchar_timeout_us(timeout);
-        if (c < 0) return -1;
+        if (c < 0) return RES_TIMEOUT;
         packet[i] = (uint8_t)c;
     }
 
     if (packet[PACKET_SEQNO_INDEX] != (uint8_t)(~packet[PACKET_SEQNO_COMP_INDEX])) {
-        return -1;
+        return RES_ERROR;
     }
 
     uint16_t crc = (packet[*length + PACKET_HEADER] << 8) | packet[*length + PACKET_HEADER + 1];
     if (crc16_ccitt(&packet[PACKET_HEADER], *length) != crc) {
-        return -1;
+        return RES_ERROR;
     }
 
+    *seqno = packet[PACKET_SEQNO_INDEX];
     memcpy(data, &packet[PACKET_HEADER], *length);
-    return packet[PACKET_SEQNO_INDEX];
+    return RES_OK;
 }
 
 int ymodem_receive(uint8_t *buf, size_t max_size, char *filename) {
     uint8_t packet_data[PACKET_1K_SIZE];
     int packet_length;
+    uint8_t seqno;
     int errors = 0;
     int session_done = 0;
     int file_done = 0;
@@ -99,9 +109,9 @@ int ymodem_receive(uint8_t *buf, size_t max_size, char *filename) {
         putchar(CRC_C);
 
         while (!file_done) {
-            int res = receive_packet(packet_data, &packet_length, 1000000);
-            if (res >= 0) {
-                if (res == (packet_count & 0xFF)) {
+            receive_res_t res = receive_packet(packet_data, &packet_length, &seqno, 1000000);
+            if (res == RES_OK) {
+                if (seqno == (uint8_t)(packet_count & 0xFF)) {
                     if (packet_count == 0) {
                         // Filename packet
                         if (packet_data[0] == 0) {
@@ -148,19 +158,26 @@ int ymodem_receive(uint8_t *buf, size_t max_size, char *filename) {
                     errors = 0;
                 } else {
                     // Wrong sequence number or duplicate
-                    if (res == ((packet_count - 1) & 0xFF)) {
+                    if (seqno == (uint8_t)((packet_count - 1) & 0xFF)) {
                         putchar(ACK); // Duplicate, just ACK it
                     } else {
                         errors++;
                         putchar(NAK);
                     }
                 }
-            } else if (res == EOT) {
-                putchar(ACK);
-                file_done = 1;
-            } else if (res == CAN) {
+            } else if (res == RES_EOT) {
+                putchar(NAK); // NAK the first EOT
+                if (getchar_timeout_us(1000000) == EOT) {
+                    putchar(ACK); // ACK the second EOT
+                    putchar(CRC_C); // Request for next file or end block
+                    file_done = 1;
+                } else {
+                    errors++;
+                }
+            } else if (res == RES_CAN) {
                 return -1;
             } else {
+                // Error or Timeout
                 errors++;
                 if (errors > MAX_ERRORS) return -2;
                 if (packet_count == 0) {

@@ -124,11 +124,14 @@ int main() {
 
         extern stdio_driver_t stdio_usb;
         stdio_set_translate_crlf(&stdio_usb, false);
+        extern stdio_driver_t stdio_uart;
+        stdio_set_translate_crlf(&stdio_uart, false);
 
         char filename[64];
         int res = ymodem_receive(script_buffer, SCRIPT_MAX_SIZE, filename);
 
         stdio_set_translate_crlf(&stdio_usb, true);
+        stdio_set_translate_crlf(&stdio_uart, true);
 
         if (res > 0) {
             printf("\nSuccessfully received %d bytes: %s\n", res, filename);
