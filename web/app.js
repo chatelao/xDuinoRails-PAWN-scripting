@@ -136,18 +136,6 @@ PawnGenerator.forBlock['math_number'] = function(block) {
   return [code, PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
-PawnGenerator.forBlock['controls_repeat_ext'] = function(block) {
-  const repeats = PawnGenerator.valueToCode(block, 'TIMES', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
-  const branch = PawnGenerator.statementToCode(block, 'DO');
-  return 'for (new i = 0; i < ' + repeats + '; i++) {\n' + branch + '}\n';
-};
-
-PawnGenerator.forBlock['controls_whileUntil'] = function(block) {
-  const argument0 = PawnGenerator.valueToCode(block, 'BOOL', PawnGenerator.PRECEDENCE.ATOMIC) || 'false';
-  const branch = PawnGenerator.statementToCode(block, 'DO');
-  return 'while (' + argument0 + ') {\n' + branch + '}\n';
-};
-
 PawnGenerator.forBlock['logic_boolean'] = function(block) {
   const code = (block.getFieldValue('BOOL') == 'TRUE') ? 'true' : 'false';
   return [code, PawnGenerator.PRECEDENCE.ATOMIC];
@@ -336,65 +324,6 @@ function parseStatements(code, connection) {
             currentConnection.connect(block.previousConnection);
             currentConnection = block.nextConnection;
             remaining = remaining.substring(match[0].length).trim();
-        }
-        // while (bool) { ... }
-        else if (match = remaining.match(/^while\s*\(([^)]+)\)\s*\{/)) {
-            const block = workspace.newBlock('controls_whileUntil');
-            const condition = match[1].trim();
-            // Handle true/false
-            if (condition === 'true' || condition === 'false') {
-                const boolBlock = workspace.newBlock('logic_boolean');
-                boolBlock.setFieldValue(condition.toUpperCase(), 'BOOL');
-                boolBlock.initSvg();
-                boolBlock.render();
-                block.getInput('BOOL').connection.connect(boolBlock.outputConnection);
-            }
-
-            // Find closing brace
-            let braceCount = 1;
-            let i = match[0].length;
-            let start = i;
-            while (braceCount > 0 && i < remaining.length) {
-                if (remaining[i] === '{') braceCount++;
-                if (remaining[i] === '}') braceCount--;
-                i++;
-            }
-            const innerBody = remaining.substring(start, i - 1).trim();
-            parseStatements(innerBody, block.getInput('DO').connection);
-
-            block.initSvg();
-            block.render();
-            currentConnection.connect(block.previousConnection);
-            currentConnection = block.nextConnection;
-            remaining = remaining.substring(i).trim();
-        }
-        // for (new i = 0; i < repeats; i++) { ... }
-        else if (match = remaining.match(/^for\s*\(new\s+i\s*=\s*0;\s*i\s*<\s*(\d+);\s*i\+\+\)\s*\{/)) {
-            const block = workspace.newBlock('controls_repeat_ext');
-            const repeats = match[1];
-            const numBlock = workspace.newBlock('math_number');
-            numBlock.setFieldValue(repeats, 'NUM');
-            numBlock.initSvg();
-            numBlock.render();
-            block.getInput('TIMES').connection.connect(numBlock.outputConnection);
-
-            // Find closing brace
-            let braceCount = 1;
-            let i = match[0].length;
-            let start = i;
-            while (braceCount > 0 && i < remaining.length) {
-                if (remaining[i] === '{') braceCount++;
-                if (remaining[i] === '}') braceCount--;
-                i++;
-            }
-            const innerBody = remaining.substring(start, i - 1).trim();
-            parseStatements(innerBody, block.getInput('DO').connection);
-
-            block.initSvg();
-            block.render();
-            currentConnection.connect(block.previousConnection);
-            currentConnection = block.nextConnection;
-            remaining = remaining.substring(i).trim();
         }
         // if (cond) { ... } [else if (cond) { ... }] [else { ... }]
         else if (match = remaining.match(/^if\s*\(([^)]+)\)\s*\{/)) {
