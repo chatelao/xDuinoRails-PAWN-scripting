@@ -55,12 +55,20 @@ static cell AMX_NATIVE_CALL n_direction(AMX *amx, const cell *params) {
     return 1; // Forward
 }
 
+// Native function: CV(id)
+static cell AMX_NATIVE_CALL n_cv(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return rand() % 256;
+}
+
 static const AMX_NATIVE_INFO led_natives[] = {
     { "set_led",   n_set_led },
     { "delay",     n_delay },
     { "print",     n_print },
     { "speed",     n_speed },
     { "direction", n_direction },
+    { "CV",        n_cv },
     { NULL, NULL }
 };
 
@@ -109,6 +117,7 @@ void run_script(void *program, size_t size) {
 
 int main() {
     stdio_init_all();
+    srand(time_us_64());
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
