@@ -13,7 +13,7 @@ Should Blink LED Via Pawn Script
     [Documentation]             Verifies that the Pawn script correctly toggles the LED by checking UART output.
     [Tags]                      pawn  led  blink
     Execute Command             mach create
-    Execute Command             machine LoadPlatformDescriptionFromString "cpu: CPU.CortexM @ sysbus { cpuType: \\"cortex-m0+\\" }; nvic: IRQControllers.NVIC @ sysbus 0xE000E000 { cpu: cpu }; sram: Memory.MappedMemory @ sysbus 0x20000000 { size: 0x40000 }; flash: Memory.MappedMemory @ sysbus 0x10000000 { size: 0x200000 }; uart0: UART.PL011 @ sysbus 0x40034000 { nvic: nvic }"
+    Execute Command             machine LoadPlatformDescriptionFromString "cpu0: CPU.CortexM @ sysbus { cpuType: \\"cortex-m0+\\"; id: 0 }; nvic0: IRQControllers.NVIC @ sysbus 0xe000e000 { cpu: cpu0 }; sram0: Memory.MappedMemory @ sysbus 0x20000000 { size: 0x42000 }; flash0: Memory.MappedMemory @ sysbus 0x10000000 { size: 0x200000 }; uart0: UART.RP2040Uart @ sysbus 0x40034000"
     Execute Command             sysbus LoadELF ${BIN}
     Create Terminal Tester      ${UART}
     Start Emulation
