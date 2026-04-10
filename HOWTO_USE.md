@@ -17,6 +17,18 @@ To compile a Pawn script (e.g., `blink.p`), use the `pawncc` compiler:
 pawncc blink.p -o blink.amx
 ```
 
+### Uploading a script via YMODEM
+
+You can upload a compiled `.amx` script to the Seeed RP2040 without re-flashing the firmware:
+
+1.  Connect to the device via a serial terminal (e.g., Minicom, Tera Term, or the built-in serial monitor).
+2.  Reset the device.
+3.  When you see `Press 'u' within 5 seconds to upload a new script via YMODEM...`, press the `u` key.
+4.  The device will enter upload mode.
+5.  Use your terminal's YMODEM send feature to send your `.amx` file.
+    - On Linux using `sx`: `sb --ymodem myscript.amx < /dev/ttyACM0 > /dev/ttyACM0`
+    - On Tera Term: `File -> Transfer -> YMODEM -> Send...`
+6.  Once the transfer is complete, the script will start automatically.
 ### Documentation
 
 For a comprehensive guide to the Pawn language, refer to the official [Pawn Language Guide](https://codeberg.org/compuphase/pawn/raw/branch/main/doc/Pawn_Language_Guide.pdf).
