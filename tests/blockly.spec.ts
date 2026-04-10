@@ -68,4 +68,100 @@ test.describe('Blockly Integration', () => {
     await expect(consoleArea).toContainText('Compiler returned: 0', { timeout: 10000 });
     await expect(consoleArea).toContainText('Success! .amx file generated.');
   });
+
+  test('should keep logic when switching from blockly to code', async ({ page }) => {
+    const toggleBtn = page.locator('#toggle-editor');
+    const editor = page.locator('#editor');
+
+    // Switch to Blockly mode
+    await toggleBtn.click();
+
+    // Add a block
+    await page.evaluate(() => {
+        // @ts-ignore
+        const ws = Blockly.getMainWorkspace();
+        ws.clear();
+        // @ts-ignore
+        const mainBlock = ws.newBlock('pawn_main');
+        mainBlock.initSvg();
+        mainBlock.render();
+
+        // @ts-ignore
+        const ledBlock = ws.newBlock('pawn_set_led');
+        ledBlock.setFieldValue('1', 'STATUS');
+        ledBlock.initSvg();
+        ledBlock.render();
+
+        const connection = mainBlock.getInput('STACK').connection;
+        connection.connect(ledBlock.previousConnection);
+    });
+
+    // Switch back to Code
+    await toggleBtn.click();
+
+    // Verify editor has the code
+    const code = await editor.inputValue();
+    expect(code).toContain('main() {');
+    expect(code).toContain('set_led(1);');
+  });
+
+  test('should ask for confirmation if code is modified and switching to blocks', async ({ page }) => {
+    const toggleBtn = page.locator('#toggle-editor');
+    const editor = page.locator('#editor');
+
+    // 1. Generate code from blocks first to set lastGeneratedCode
+    await toggleBtn.click(); // Switch to Blocks
+    await toggleBtn.click(); // Switch to Code (sets lastGeneratedCode)
+
+    // 2. Modify code
+    await editor.fill('main() { set_led(0); }');
+
+    // 3. Try to switch back to Blocks
+    page.once('dialog', async dialog => {
+      expect(dialog.message()).toContain('manual changes');
+      await dialog.accept();
+    });
+
+    await toggleBtn.click();
+
+    // Verify we are in blockly mode
+    await expect(page.locator('#blockly-container')).toBeVisible();
+
+    // Verify blocks were generated from the modified code
+    const blockCount = await page.evaluate(() => {
+        // @ts-ignore
+        return Blockly.getMainWorkspace().getAllBlocks(false).length;
+    });
+    expect(blockCount).toBeGreaterThan(0);
+  });
+
+  test('should generate blocks from code', async ({ page }) => {
+    const toggleBtn = page.locator('#toggle-editor');
+    const editor = page.locator('#editor');
+
+    const testCode = `
+main() {
+    set_led(1);
+    delay(500);
+    while (true) {
+        set_led(0);
+    }
+}
+`;
+    await editor.fill(testCode);
+
+    await toggleBtn.click(); // Switch to Blocks
+
+    // Verify blocks were created
+    const blocks = await page.evaluate(() => {
+        // @ts-ignore
+        const ws = Blockly.getMainWorkspace();
+        return ws.getAllBlocks(false).map(b => b.type);
+    });
+
+    expect(blocks).toContain('pawn_main');
+    expect(blocks).toContain('pawn_set_led');
+    expect(blocks).toContain('pawn_delay');
+    expect(blocks).toContain('controls_whileUntil');
+  });
 });

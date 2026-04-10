@@ -83,6 +83,68 @@ PawnGenerator.forBlock['logic_boolean'] = function(block) {
   return [code, PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
+PawnGenerator.forBlock['controls_if'] = function(block) {
+  let n = 0;
+  let code = '';
+  do {
+    const conditionCode = PawnGenerator.valueToCode(block, 'IF' + n, PawnGenerator.PRECEDENCE.ATOMIC) || 'false';
+    const branchCode = PawnGenerator.statementToCode(block, 'DO' + n);
+    code += (n === 0 ? 'if (' : ' else if (') + conditionCode + ') {\n' + branchCode + '}';
+    n++;
+  } while (block.getInput('IF' + n));
+
+  if (block.getInput('ELSE')) {
+    const branchCode = PawnGenerator.statementToCode(block, 'ELSE');
+    code += ' else {\n' + branchCode + '}';
+  }
+  return code + '\n';
+};
+
+PawnGenerator.forBlock['logic_compare'] = function(block) {
+  const OPERATORS = {
+    'EQ': '==',
+    'NEQ': '!=',
+    'LT': '<',
+    'LTE': '<=',
+    'GT': '>',
+    'GTE': '>='
+  };
+  const operator = OPERATORS[block.getFieldValue('OP')];
+  const argument0 = PawnGenerator.valueToCode(block, 'A', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  const argument1 = PawnGenerator.valueToCode(block, 'B', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  const code = argument0 + ' ' + operator + ' ' + argument1;
+  return [code, PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['logic_operation'] = function(block) {
+  const operator = (block.getFieldValue('OP') == 'AND') ? '&&' : '||';
+  const argument0 = PawnGenerator.valueToCode(block, 'A', PawnGenerator.PRECEDENCE.ATOMIC) || 'false';
+  const argument1 = PawnGenerator.valueToCode(block, 'B', PawnGenerator.PRECEDENCE.ATOMIC) || 'false';
+  const code = '(' + argument0 + ' ' + operator + ' ' + argument1 + ')';
+  return [code, PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['math_arithmetic'] = function(block) {
+  const OPERATORS = {
+    'ADD': [' + ', PawnGenerator.PRECEDENCE.ATOMIC],
+    'MINUS': [' - ', PawnGenerator.PRECEDENCE.ATOMIC],
+    'MULTIPLY': [' * ', PawnGenerator.PRECEDENCE.ATOMIC],
+    'DIVIDE': [' / ', PawnGenerator.PRECEDENCE.ATOMIC],
+    'POWER': [null, PawnGenerator.PRECEDENCE.ATOMIC]  // Pawn doesn't have **
+  };
+  const tuple = OPERATORS[block.getFieldValue('OP')];
+  const operator = tuple[0];
+  const argument0 = PawnGenerator.valueToCode(block, 'A', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  const argument1 = PawnGenerator.valueToCode(block, 'B', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  let code;
+  if (!operator) {
+    code = 'pow(' + argument0 + ', ' + argument1 + ')';
+  } else {
+    code = argument0 + operator + argument1;
+  }
+  return [code, PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
 PawnGenerator.scrub_ = function(block, code, opt_thisOnly) {
   const nextBlock = block.getNextBlock();
   const nextCode = opt_thisOnly ? '' : PawnGenerator.blockToCode(nextBlock);
@@ -101,13 +163,168 @@ const consoleArea = document.getElementById('console');
 
 let isBlocklyMode = false;
 let workspace;
+let lastGeneratedCode = '';
+
+function generatePawnCode() {
+    let generatedCode = '';
+    try {
+        generatedCode = PawnGenerator.workspaceToCode(workspace);
+    } catch (e) {
+        log('Error generating code: ' + e);
+    }
+    return 'native set_led(status);\n' +
+           'native delay(ms);\n\n' +
+           generatedCode;
+}
+
+function generateBlocksFromCode(code) {
+    if (!workspace) return;
+    workspace.clear();
+
+    // Remove comments and native declarations
+    code = code.replace(/\/\/.*$/gm, '');
+    code = code.replace(/native\s+\w+\([^)]*\);/g, '');
+
+    // Basic regex-based parser for the most common blocks
+    const mainMatch = code.match(/main\s*\(\s*\)\s*\{([\s\S]*)\}/);
+    if (mainMatch) {
+        const mainBlock = workspace.newBlock('pawn_main');
+        mainBlock.initSvg();
+        mainBlock.render();
+
+        const body = mainMatch[1].trim();
+        parseStatements(body, mainBlock.getInput('STACK').connection);
+    }
+}
+
+function parseStatements(code, connection) {
+    let currentConnection = connection;
+    let remaining = code.trim();
+
+    while (remaining.length > 0) {
+        let match;
+        // set_led(status)
+        if (match = remaining.match(/^set_led\((\d+)\);/)) {
+            const block = workspace.newBlock('pawn_set_led');
+            block.setFieldValue(match[1], 'STATUS');
+            block.initSvg();
+            block.render();
+            currentConnection.connect(block.previousConnection);
+            currentConnection = block.nextConnection;
+            remaining = remaining.substring(match[0].length).trim();
+        }
+        // delay(ms)
+        else if (match = remaining.match(/^delay\((\d+)\);/)) {
+            const block = workspace.newBlock('pawn_delay');
+            const numBlock = workspace.newBlock('math_number');
+            numBlock.setFieldValue(match[1], 'NUM');
+            numBlock.initSvg();
+            numBlock.render();
+            block.getInput('MS').connection.connect(numBlock.outputConnection);
+            block.initSvg();
+            block.render();
+            currentConnection.connect(block.previousConnection);
+            currentConnection = block.nextConnection;
+            remaining = remaining.substring(match[0].length).trim();
+        }
+        // while (bool) { ... }
+        else if (match = remaining.match(/^while\s*\(([^)]+)\)\s*\{/)) {
+            const block = workspace.newBlock('controls_whileUntil');
+            const condition = match[1].trim();
+            // Handle true/false
+            if (condition === 'true' || condition === 'false') {
+                const boolBlock = workspace.newBlock('logic_boolean');
+                boolBlock.setFieldValue(condition.toUpperCase(), 'BOOL');
+                boolBlock.initSvg();
+                boolBlock.render();
+                block.getInput('BOOL').connection.connect(boolBlock.outputConnection);
+            }
+
+            // Find closing brace
+            let braceCount = 1;
+            let i = match[0].length;
+            let start = i;
+            while (braceCount > 0 && i < remaining.length) {
+                if (remaining[i] === '{') braceCount++;
+                if (remaining[i] === '}') braceCount--;
+                i++;
+            }
+            const innerBody = remaining.substring(start, i - 1).trim();
+            parseStatements(innerBody, block.getInput('DO').connection);
+
+            block.initSvg();
+            block.render();
+            currentConnection.connect(block.previousConnection);
+            currentConnection = block.nextConnection;
+            remaining = remaining.substring(i).trim();
+        }
+        // for (new i = 0; i < repeats; i++) { ... }
+        else if (match = remaining.match(/^for\s*\(new\s+i\s*=\s*0;\s*i\s*<\s*(\d+);\s*i\+\+\)\s*\{/)) {
+            const block = workspace.newBlock('controls_repeat_ext');
+            const repeats = match[1];
+            const numBlock = workspace.newBlock('math_number');
+            numBlock.setFieldValue(repeats, 'NUM');
+            numBlock.initSvg();
+            numBlock.render();
+            block.getInput('TIMES').connection.connect(numBlock.outputConnection);
+
+            // Find closing brace
+            let braceCount = 1;
+            let i = match[0].length;
+            let start = i;
+            while (braceCount > 0 && i < remaining.length) {
+                if (remaining[i] === '{') braceCount++;
+                if (remaining[i] === '}') braceCount--;
+                i++;
+            }
+            const innerBody = remaining.substring(start, i - 1).trim();
+            parseStatements(innerBody, block.getInput('DO').connection);
+
+            block.initSvg();
+            block.render();
+            currentConnection.connect(block.previousConnection);
+            currentConnection = block.nextConnection;
+            remaining = remaining.substring(i).trim();
+        }
+        else {
+            // Skip unknown statement until semicolon or end
+            const nextSemi = remaining.indexOf(';');
+            if (nextSemi !== -1) {
+                remaining = remaining.substring(nextSemi + 1).trim();
+            } else {
+                remaining = "";
+            }
+        }
+    }
+}
 
 toggleBtn.addEventListener('click', () => {
-    isBlocklyMode = !isBlocklyMode;
     if (isBlocklyMode) {
+        // Switch to Code
+        const code = generatePawnCode();
+        editor.value = code;
+        lastGeneratedCode = code;
+
+        isBlocklyMode = false;
+        editorContainer.style.display = 'flex';
+        blocklyContainer.style.display = 'none';
+        toggleBtn.textContent = 'Switch to Blocks';
+    } else {
+        // Switch to Blocks
+        const currentCode = editor.value;
+        const needsConfirmation = lastGeneratedCode !== '' && currentCode !== lastGeneratedCode;
+
+        if (needsConfirmation) {
+            if (!confirm('You have made manual changes to the code. Switching to blocks will attempt to re-parse your code, and some manual changes might be lost. Continue?')) {
+                return;
+            }
+        }
+
+        isBlocklyMode = true;
         editorContainer.style.display = 'none';
         blocklyContainer.style.display = 'flex';
         toggleBtn.textContent = 'Switch to Code';
+
         if (!workspace) {
             workspace = Blockly.inject('blockly-div', {
                 toolbox: document.getElementById('toolbox'),
@@ -117,10 +334,10 @@ toggleBtn.addEventListener('click', () => {
         } else {
             Blockly.svgResize(workspace);
         }
-    } else {
-        editorContainer.style.display = 'flex';
-        blocklyContainer.style.display = 'none';
-        toggleBtn.textContent = 'Switch to Blocks';
+
+        if (needsConfirmation || lastGeneratedCode === '') {
+            generateBlocksFromCode(currentCode);
+        }
     }
 });
 
@@ -155,15 +372,8 @@ compileBtn.addEventListener('click', async () => {
 
     let code = editor.value;
     if (isBlocklyMode) {
-        let generatedCode = '';
-        try {
-            generatedCode = PawnGenerator.workspaceToCode(workspace);
-        } catch (e) {
-            log('Error generating code: ' + e);
-        }
-        code = 'native set_led(status);\n' +
-               'native delay(ms);\n\n' +
-               generatedCode;
+        code = generatePawnCode();
+        lastGeneratedCode = code;
         log('Generated Code:\n' + code);
     }
 
