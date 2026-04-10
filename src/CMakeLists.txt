@@ -11,7 +11,6 @@ add_executable(pawn_led
     main.c
     third_party/pawn/amx.c
     third_party/pawn/amxcore.c
-    third_party/pawn/amxexec.c
 )
 
 # Pawn configuration
