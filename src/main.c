@@ -41,10 +41,26 @@ static cell AMX_NATIVE_CALL n_print(AMX *amx, const cell *params) {
     return 0;
 }
 
+// Native function: speed()
+static cell AMX_NATIVE_CALL n_speed(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return 55;
+}
+
+// Native function: direction()
+static cell AMX_NATIVE_CALL n_direction(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return 1; // Forward
+}
+
 static const AMX_NATIVE_INFO led_natives[] = {
-    { "set_led", n_set_led },
-    { "delay",   n_delay },
-    { "print",   n_print },
+    { "set_led",   n_set_led },
+    { "delay",     n_delay },
+    { "print",     n_print },
+    { "speed",     n_speed },
+    { "direction", n_direction },
     { NULL, NULL }
 };
 
