@@ -8,14 +8,18 @@
         body { font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
         header { background: #333; color: white; padding: 1rem; }
         main { display: flex; flex: 1; overflow: hidden; }
-        #editor-container { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #ccc; }
+        #editor-container, #blockly-container { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #ccc; }
+        #blockly-container { display: none; }
+        #blockly-div { flex: 1; width: 100%; height: 100%; }
         #output-container { flex: 1; display: flex; flex-direction: column; background: #f0f0f0; }
         textarea { flex: 1; resize: none; border: none; padding: 1rem; font-family: monospace; font-size: 14px; }
         #console { flex: 1; overflow-y: auto; padding: 1rem; font-family: monospace; background: #1e1e1e; color: #d4d4d4; white-space: pre-wrap; }
         .toolbar { padding: 0.5rem; background: #eee; border-bottom: 1px solid #ccc; }
         button { padding: 0.5rem 1rem; cursor: pointer; }
         #download-link { margin-left: 1rem; display: none; }
+        .toggle-btn { background: #007bff; color: white; border: none; border-radius: 4px; }
     </style>
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
 </head>
 <body>
     <header>
@@ -24,10 +28,14 @@
     <div class="toolbar">
         <button id="compile-btn" disabled>Loading Compiler...</button>
         <button id="load-btn">Load Script (.pwn)</button>
+        <button id="toggle-editor" class="toggle-btn">Switch to Blocks</button>
         <input type="file" id="file-input" accept=".pwn,.p,.inc" style="display: none;">
         <a id="download-link" href="#" download="script.amx">Download .amx</a>
     </div>
     <main>
+        <div id="blockly-container">
+            <div id="blockly-div"></div>
+        </div>
         <div id="editor-container">
             <textarea id="editor" spellcheck="false">
 main() {
@@ -79,5 +87,32 @@ main() {
     </script>
     <script src="wasm/pawncc.js"></script>
     <script src="app.js"></script>
+    <xml id="toolbox" style="display: none">
+        <category name="Pawn" colour="#5b67a5">
+            <block type="pawn_main"></block>
+            <block type="pawn_set_led"></block>
+            <block type="pawn_delay"></block>
+        </category>
+        <category name="Logic" colour="#5b80a5">
+            <block type="controls_if"></block>
+            <block type="logic_compare"></block>
+            <block type="logic_operation"></block>
+            <block type="logic_boolean"></block>
+        </category>
+        <category name="Loops" colour="#5ba55b">
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_whileUntil"></block>
+        </category>
+        <category name="Math" colour="#5b67a5">
+            <block type="math_number"></block>
+            <block type="math_arithmetic"></block>
+        </category>
+    </xml>
 </body>
 </html>
