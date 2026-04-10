@@ -57,7 +57,9 @@ jobs:
       - name: Run Renode Tests
         run: |
           pip3 install -r renode/tests/requirements.txt
-          ./renode/renode-test tests/pawn_test.robot
+          # The portable version needs RENODE_PATH or similar sometimes to find its internal files
+          export RENODE_PATH=$GITHUB_WORKSPACE/renode
+          ./renode/renode-test --renode-path ./renode/renode tests/pawn_test.robot
 
       - name: Upload UF2 Artifact
         uses: actions/upload-artifact@v4
