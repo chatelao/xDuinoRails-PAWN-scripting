@@ -15,6 +15,7 @@ flash: Memory.MappedMemory @ sysbus 0x10000000
     size: 0x200000
 
 uart0: UART.PL011 @ sysbus 0x40034000
+    separator: "\n"
 
 sysbus:
     init:

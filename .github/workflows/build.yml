@@ -47,6 +47,12 @@ jobs:
           # renode-version: '1.16.1' # Default might be better if 1.16.1 is missing rp2040
           tests-to-run: 'tests/pawn_test.robot'
 
+      - name: List Renode Platforms (Debug)
+        if: failure()
+        run: |
+          find /home/runner/work/_temp/renode* -name "*.repl" | grep rp2040 || true
+          find /home/runner/work/_temp/renode* -name "*.repl" | grep pico || true
+
       - name: Upload UF2 Artifact
         uses: actions/upload-artifact@v4
         with:
