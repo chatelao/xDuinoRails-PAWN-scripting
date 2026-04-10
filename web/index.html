@@ -23,6 +23,8 @@
     </header>
     <div class="toolbar">
         <button id="compile-btn" disabled>Loading Compiler...</button>
+        <button id="load-btn">Load Script (.pwn)</button>
+        <input type="file" id="file-input" accept=".pwn,.p,.inc" style="display: none;">
         <a id="download-link" href="#" download="script.amx">Download .amx</a>
     </div>
     <main>
@@ -40,6 +42,12 @@ main() {
     <script>
         // Define Module before loading the emscripten-generated JS
         var Module = {
+            locateFile: function(path, prefix) {
+                if (path.endsWith(".data") || path.endsWith(".wasm")) {
+                    return "wasm/" + path;
+                }
+                return prefix + path;
+            },
             preRun: [],
             postRun: [],
             print: (function() {

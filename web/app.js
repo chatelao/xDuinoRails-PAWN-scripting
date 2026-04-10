@@ -1,4 +1,6 @@
 const compileBtn = document.getElementById('compile-btn');
+const loadBtn = document.getElementById('load-btn');
+const fileInput = document.getElementById('file-input');
 const downloadLink = document.getElementById('download-link');
 const editor = document.getElementById('editor');
 const consoleArea = document.getElementById('console');
@@ -11,6 +13,22 @@ function log(text) {
 function clearLog() {
     consoleArea.textContent = '';
 }
+
+loadBtn.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            editor.value = e.target.result;
+            log('Loaded file: ' + file.name);
+        };
+        reader.readAsText(file);
+    }
+});
 
 compileBtn.addEventListener('click', async () => {
     clearLog();
