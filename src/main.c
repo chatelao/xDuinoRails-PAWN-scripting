@@ -14,6 +14,7 @@
 // Native function: set_led(status)
 static cell AMX_NATIVE_CALL n_set_led(AMX *amx, const cell *params) {
     (void)amx;
+    printf("LED STATE: %d\n", (int)params[1]);
     gpio_put(LED_PIN, params[1]);
     return 0;
 }

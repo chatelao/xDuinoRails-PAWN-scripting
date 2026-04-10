@@ -22,7 +22,11 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs
+
+      - name: Compile Pawn Script
+        run: |
+          node scripts/compile_pawn.js
 
       - name: Fetch Pico SDK
         run: |
@@ -36,6 +40,20 @@ jobs:
           cd build
           cmake ../src -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
           make
+
+      - name: Install Renode
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install --user robotframework
+          # Install Renode
+          wget https://github.com/renode/renode/releases/download/v1.15.3/renode_1.15.3_amd64.deb
+          sudo apt-get install -y ./renode_1.15.3_amd64.deb
+          rm renode_1.15.3_amd64.deb
+
+      - name: Run Renode Tests
+        run: |
+          renode-test tests/pawn_test.robot
 
       - name: Upload UF2 Artifact
         uses: actions/upload-artifact@v4
