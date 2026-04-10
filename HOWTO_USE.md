@@ -17,6 +17,10 @@ To compile a Pawn script (e.g., `blink.p`), use the `pawncc` compiler:
 pawncc blink.p -o blink.amx
 ```
 
+### Documentation
+
+For a comprehensive guide to the Pawn language, refer to the official [Pawn Language Guide](https://codeberg.org/compuphase/pawn/raw/branch/main/doc/Pawn_Language_Guide.pdf).
+
 ### Example script (blink.p)
 
 ```pawn
