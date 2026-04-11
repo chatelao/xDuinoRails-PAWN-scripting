@@ -92,7 +92,15 @@ main() {
             <block type="pawn_main"></block>
             <block type="pawn_on_speed_change"></block>
             <block type="pawn_on_direction_change"></block>
+            <block type="pawn_on_function_change"></block>
             <block type="pawn_set_led"></block>
+            <block type="pawn_set_output">
+                <value name="ID">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
             <block type="pawn_delay"></block>
             <block type="pawn_speed"></block>
             <block type="pawn_direction"></block>
@@ -103,6 +111,17 @@ main() {
                     </shadow>
                 </value>
             </block>
+            <block type="pawn_get_function">
+                <value name="ID">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="pawn_actual_speed"></block>
+            <block type="pawn_load"></block>
+            <block type="pawn_temperature"></block>
+            <block type="pawn_voltage"></block>
             <block type="pawn_print">
                 <value name="TEXT">
                     <shadow type="text">

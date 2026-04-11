@@ -35,6 +35,18 @@ Blockly.Blocks['pawn_on_direction_change'] = {
   }
 };
 
+Blockly.Blocks['pawn_on_function_change'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("onFunctionChange(id, state)");
+    this.appendStatementInput("STACK")
+        .setCheck(null);
+    this.setColour(230);
+    this.setTooltip("Event triggered when a DCC function changes");
+    this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['pawn_speed'] = {
   init: function() {
     this.appendDummyInput()
@@ -69,6 +81,62 @@ Blockly.Blocks['pawn_cv'] = {
   }
 };
 
+Blockly.Blocks['pawn_get_function'] = {
+  init: function() {
+    this.appendValueInput("ID")
+        .setCheck("Number")
+        .appendField("get_function");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the state of a DCC function");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_actual_speed'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("actual_speed");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the actual speed (Railcom)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_load'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("load");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the motor load (Railcom)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_temperature'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("temperature");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the decoder temperature (Railcom)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_voltage'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("voltage");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the track voltage (Railcom)");
+    this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['pawn_set_led'] = {
   init: function() {
     this.appendDummyInput()
@@ -78,6 +146,22 @@ Blockly.Blocks['pawn_set_led'] = {
     this.setNextStatement(true, null);
     this.setColour(160);
     this.setTooltip("Sets the LED state");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_set_output'] = {
+  init: function() {
+    this.appendValueInput("ID")
+        .setCheck("Number")
+        .appendField("set_output");
+    this.appendDummyInput()
+        .appendField("to")
+        .appendField(new Blockly.FieldDropdown([["ON","1"], ["OFF","0"]]), "STATUS");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(160);
+    this.setTooltip("Sets a physical output state");
     this.setHelpUrl("");
   }
 };
@@ -132,9 +216,20 @@ PawnGenerator.forBlock['pawn_on_direction_change'] = function(block) {
   return 'public onDirectionChange() {\n' + stack + '}\n';
 };
 
+PawnGenerator.forBlock['pawn_on_function_change'] = function(block) {
+  const stack = PawnGenerator.statementToCode(block, 'STACK');
+  return 'public onFunctionChange(id, state) {\n' + stack + '}\n';
+};
+
 PawnGenerator.forBlock['pawn_set_led'] = function(block) {
   const status = block.getFieldValue('STATUS');
   return 'set_led(' + status + ');\n';
+};
+
+PawnGenerator.forBlock['pawn_set_output'] = function(block) {
+  const id = PawnGenerator.valueToCode(block, 'ID', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  const status = block.getFieldValue('STATUS');
+  return 'set_output(' + id + ', ' + status + ');\n';
 };
 
 PawnGenerator.forBlock['pawn_delay'] = function(block) {
@@ -158,6 +253,27 @@ PawnGenerator.forBlock['pawn_direction'] = function(block) {
 PawnGenerator.forBlock['pawn_cv'] = function(block) {
   const id = PawnGenerator.valueToCode(block, 'ID', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
   return ['CV(' + id + ')', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_get_function'] = function(block) {
+  const id = PawnGenerator.valueToCode(block, 'ID', PawnGenerator.PRECEDENCE.ATOMIC) || '0';
+  return ['get_function(' + id + ')', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_actual_speed'] = function(block) {
+  return ['actual_speed()', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_load'] = function(block) {
+  return ['load()', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_temperature'] = function(block) {
+  return ['temperature()', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_voltage'] = function(block) {
+  return ['voltage()', PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
 PawnGenerator.forBlock['text'] = function(block) {
@@ -276,7 +392,13 @@ function generatePawnCode() {
            'native delay(ms);\n' +
            'native speed();\n' +
            'native direction();\n' +
-           'native CV(id);\n\n' +
+           'native CV(id);\n' +
+           'native get_function(id);\n' +
+           'native actual_speed();\n' +
+           'native load();\n' +
+           'native temperature();\n' +
+           'native voltage();\n' +
+           'native set_output(id, state);\n\n' +
            'const FORWARD = 1;\n' +
            'const BACKWARD = 0;\n\n' +
            generatedCode;
@@ -298,13 +420,16 @@ function generateBlocksFromCode(code) {
 
     // Basic regex-based parser for the most common blocks
     const functions = [
-        { name: 'main', block: 'pawn_main' },
-        { name: 'onSpeedChange', block: 'pawn_on_speed_change' },
-        { name: 'onDirectionChange', block: 'pawn_on_direction_change' }
+        { name: 'main', block: 'pawn_main', args: false },
+        { name: 'onSpeedChange', block: 'pawn_on_speed_change', args: false },
+        { name: 'onDirectionChange', block: 'pawn_on_direction_change', args: false },
+        { name: 'onFunctionChange', block: 'pawn_on_function_change', args: true }
     ];
 
     functions.forEach(fn => {
-        const regex = new RegExp('(?:public\\s+)?' + fn.name + '\\s*\\(\\s*\\)\\s*\\{');
+        const regex = fn.args ?
+            new RegExp('(?:public\\s+)?' + fn.name + '\\s*\\([^)]*\\)\\s*\\{') :
+            new RegExp('(?:public\\s+)?' + fn.name + '\\s*\\(\\s*\\)\\s*\\{');
         const match = code.match(regex);
         if (match) {
             const startIdx = match.index + match[0].length;
@@ -336,6 +461,21 @@ function parseStatements(code, connection) {
         if (match = remaining.match(/^set_led\((\d+)\);/)) {
             const block = workspace.newBlock('pawn_set_led');
             block.setFieldValue(match[1], 'STATUS');
+            block.initSvg();
+            block.render();
+            currentConnection.connect(block.previousConnection);
+            currentConnection = block.nextConnection;
+            remaining = remaining.substring(match[0].length).trim();
+        }
+        // set_output(id, state)
+        else if (match = remaining.match(/^set_output\((\d+),\s*(\d+)\);/)) {
+            const block = workspace.newBlock('pawn_set_output');
+            const numBlock = workspace.newBlock('math_number');
+            numBlock.setFieldValue(match[1], 'NUM');
+            numBlock.initSvg();
+            numBlock.render();
+            block.getInput('ID').connection.connect(numBlock.outputConnection);
+            block.setFieldValue(match[2], 'STATUS');
             block.initSvg();
             block.render();
             currentConnection.connect(block.previousConnection);
