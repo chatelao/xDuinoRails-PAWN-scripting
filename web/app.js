@@ -42,7 +42,29 @@ Blockly.Blocks['pawn_on_function_change'] = {
     this.appendStatementInput("STACK")
         .setCheck(null);
     this.setColour(230);
-    this.setTooltip("Event triggered when a DCC function changes");
+    this.setTooltip("Event triggered when a DCC function changes. Use 'event id' and 'event state' blocks inside.");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_event_id'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("event id");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the 'id' parameter of the current event");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['pawn_event_state'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("event state");
+    this.setOutput(true, "Number");
+    this.setColour(160);
+    this.setTooltip("Returns the 'state' parameter of the current event");
     this.setHelpUrl("");
   }
 };
@@ -219,6 +241,14 @@ PawnGenerator.forBlock['pawn_on_direction_change'] = function(block) {
 PawnGenerator.forBlock['pawn_on_function_change'] = function(block) {
   const stack = PawnGenerator.statementToCode(block, 'STACK');
   return 'public onFunctionChange(id, state) {\n' + stack + '}\n';
+};
+
+PawnGenerator.forBlock['pawn_event_id'] = function(block) {
+  return ['id', PawnGenerator.PRECEDENCE.ATOMIC];
+};
+
+PawnGenerator.forBlock['pawn_event_state'] = function(block) {
+  return ['state', PawnGenerator.PRECEDENCE.ATOMIC];
 };
 
 PawnGenerator.forBlock['pawn_set_led'] = function(block) {
