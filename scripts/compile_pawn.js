@@ -3,20 +3,25 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const projectRoot = process.cwd();
-const pawnccPath = path.join(projectRoot, 'pawn_build_final/pawncc');
 const inputPath = path.join(projectRoot, 'scripts/blink.p');
 const outputPath = path.join(projectRoot, 'scripts/blink.amx');
 const headerPath = path.join(projectRoot, 'src/blink_amx.h');
 
 try {
     console.log('Compiling Pawn script...');
-
-    if (process.platform === 'linux') {
-        try { execSync(`chmod +x "${pawnccPath}"`); } catch (e) {}
+    // Use pawncc from PATH or fall back to committed binary if on local dev
+    let pawncc = 'pawncc';
+    try {
+        execSync('pawncc --help', { stdio: 'ignore' });
+    } catch (e) {
+        pawncc = path.join(projectRoot, 'pawn_build_final/pawncc');
+        if (process.platform === 'linux') {
+            try { execSync(`chmod +x "${pawncc}"`); } catch (e) {}
+        }
     }
 
-    // Use the committed binary which is known to work on 22.04
-    execSync(`"${pawnccPath}" "${inputPath}" -o"${outputPath}" -O2`, { stdio: 'inherit' });
+    console.log(`Using compiler: ${pawncc}`);
+    execSync(`"${pawncc}" "${inputPath}" -o"${outputPath}" -O2`, { stdio: 'inherit' });
 
     const amxData = fs.readFileSync(outputPath);
     console.log('Successfully compiled blink.p to blink.amx (' + amxData.length + ' bytes)');

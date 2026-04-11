@@ -24,7 +24,19 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs build-essential
+
+      - name: Build Pawn Compiler
+        run: |
+          git clone https://github.com/compuphase/pawn.git
+          cd pawn
+          git checkout v4.1.7152 # Use a known stable version
+          cd compiler
+          mkdir build
+          cd build
+          cmake .. -DPAWN_CELLSIZE=32
+          make pawncc
+          sudo cp pawncc /usr/local/bin/pawncc
 
       - name: Compile Pawn Script
         run: |
@@ -54,7 +66,6 @@ jobs:
       - name: Setup Renode
         uses: antmicro/renode-test-action@v4
         with:
-          # renode-version: '1.16.1' # Default might be better if 1.16.1 is missing rp2040
           tests-to-run: 'tests/pawn_test.robot'
 
       - name: List Renode Platforms (Debug)
