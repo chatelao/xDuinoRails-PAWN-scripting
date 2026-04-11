@@ -3,18 +3,15 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const projectRoot = process.cwd();
-// The native binary is committed in the repo
 const pawnccPath = path.join(projectRoot, 'pawn_build_final/pawncc');
 const inputPath = path.join(projectRoot, 'scripts/blink.p');
 const outputPath = path.join(projectRoot, 'scripts/blink.amx');
 const headerPath = path.join(projectRoot, 'src/blink_amx.h');
-// Include path for standard libraries if any
 const includePath = path.join(projectRoot, 'web/include');
 
 try {
-    console.log('Compiling Pawn script using native compiler...');
+    console.log('Compiling Pawn script...');
 
-    // Ensure the binary is executable (it should be, but just in case)
     if (process.platform === 'linux') {
         try { execSync(`chmod +x "${pawnccPath}"`); } catch (e) {}
     }
@@ -24,6 +21,7 @@ try {
         command += ` -i"${includePath}"`;
     }
 
+    console.log('Running:', command);
     execSync(command, { stdio: 'inherit' });
 
     if (!fs.existsSync(outputPath)) {
