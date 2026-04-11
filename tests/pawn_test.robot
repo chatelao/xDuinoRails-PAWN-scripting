@@ -20,8 +20,10 @@ Should Blink LED Via Pawn Script
     Execute Command             logLevel 2
     Create Terminal Tester      ${UART}
     Start Emulation
-    # Wait for the boot message
-    Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=90
+    # Wait for the early boot message
+    Wait For Line On Uart       Booting...  timeout=90
+    # Wait for the main runtime start
+    Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=30
     Wait For Line On Uart       Executing Pawn script...     timeout=30
     Wait For Line On Uart       LED STATE: 1
     Wait For Line On Uart       LED STATE: 0

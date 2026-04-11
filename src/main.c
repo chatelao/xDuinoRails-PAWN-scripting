@@ -9,8 +9,8 @@
 #include "flash_storage.h"
 
 static bool running_in_renode(void) {
-    // Magic address for Renode detection
-    volatile uint32_t *detection_reg = (volatile uint32_t *)0x40000000;
+    // Magic address for Renode detection (mapped to SysInfo in our .repl)
+    volatile uint32_t *detection_reg = (volatile uint32_t *)0x40004000;
     return (*detection_reg == 0xDEADBEEF);
 }
 
@@ -137,6 +137,7 @@ void run_script(void *program, size_t size) {
 int main() {
     stdio_init_all();
     printf("\nBooting...\n");
+    fflush(stdout);
     srand(time_us_64());
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
