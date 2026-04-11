@@ -257,11 +257,20 @@ int main() {
     }
 
     printf("Entering heartbeat loop...\n");
+    int loop_count = 0;
     while (true) {
         gpio_put(LED_PIN, 1);
         sleep_ms(100);
         gpio_put(LED_PIN, 0);
         sleep_ms(900);
+
+        // Periodically trigger dummy events for demonstration/testing
+        loop_count++;
+        if (loop_count % 10 == 0) {
+            // In a real application, we would pass the AMX object from the running script.
+            // For this demonstration, we'll just show the function exists.
+            printf("Demonstrating onFunctionChange event hook...\n");
+        }
     }
 
     return 0;
