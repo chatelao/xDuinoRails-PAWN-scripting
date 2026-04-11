@@ -28,13 +28,10 @@ jobs:
 
       - name: Build Pawn Compiler
         run: |
-          git clone https://github.com/compuphase/pawn.git
-          cd pawn
-          git checkout v4.1.7152 # Use a known stable version
-          cd compiler
-          mkdir build
-          cd build
-          cmake .. -DPAWN_CELLSIZE=32
+          git clone --depth 1 --branch v4.1.7152 https://github.com/compuphase/pawn.git
+          mkdir -p pawn/compiler/build
+          cd pawn/compiler/build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
           make pawncc
           sudo cp pawncc /usr/local/bin/pawncc
 

@@ -9,19 +9,8 @@ const headerPath = path.join(projectRoot, 'src/blink_amx.h');
 
 try {
     console.log('Compiling Pawn script...');
-    // Use pawncc from PATH or fall back to committed binary if on local dev
-    let pawncc = 'pawncc';
-    try {
-        execSync('pawncc --help', { stdio: 'ignore' });
-    } catch (e) {
-        pawncc = path.join(projectRoot, 'pawn_build_final/pawncc');
-        if (process.platform === 'linux') {
-            try { execSync(`chmod +x "${pawncc}"`); } catch (e) {}
-        }
-    }
-
-    console.log(`Using compiler: ${pawncc}`);
-    execSync(`"${pawncc}" "${inputPath}" -o"${outputPath}" -O2`, { stdio: 'inherit' });
+    // Use pawncc from PATH (built in CI)
+    execSync(`pawncc "${inputPath}" -o"${outputPath}" -O2`, { stdio: 'inherit' });
 
     const amxData = fs.readFileSync(outputPath);
     console.log('Successfully compiled blink.p to blink.amx (' + amxData.length + ' bytes)');
