@@ -36,7 +36,6 @@
   #define  stricmp(a,b) strcasecmp(a,b)
 #else
   #include "amx.h"
-  #define  stricmp(a,b) strcasecmp(a,b)
 #endif
 #if defined __WIN32__ || defined _WIN32 || defined WIN32 || defined _Windows
   #include <windows.h>

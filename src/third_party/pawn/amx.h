@@ -102,8 +102,6 @@
 #if !defined HAVE_ALLOCA_H
   #if defined __MINGW32__
     #define HAVE_ALLOCA_H 0
-  #elif defined __FreeBSD__
-    #undef HAVE_ALLOCA_H
   #elif defined __GNUC__ || defined __LCC__ || defined __DMC__ || defined __ARMCC_VERSION
     #define HAVE_ALLOCA_H 1
   #elif defined __WATCOMC__ && __WATCOMC__ >= 1200
