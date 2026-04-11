@@ -4,7 +4,9 @@ cpu: CPU.CortexM @ sysbus
     cpuType: "cortex-m0+"
     nvic: nvic
     id: 0
-    performanceInMips: 125
+
+cpu:
+    PerformanceInMips: 125
 
 nvic:
     -> cpu@0
@@ -20,8 +22,8 @@ uart0: UART.PL011 @ sysbus 0x40034000
 
 sysbus:
     init:
-        # Peripheral Tags - return 0xFFFFFFFF to bypass SDK initialization checks
-        Tag <0x40000000 0x1000> "SysCfg" 0xFFFFFFFF
+        # Peripheral Tags
+        Tag <0x40000000 0x1000> "SysCfg" 0x0
         Tag <0x40004000 0x0004> "SysInfo" 0xDEADBEEF # Magic for Renode detection
         Tag <0x40004004 0x0FFC> "SysInfoEx" 0xFFFFFFFF
         Tag <0x40008000 0x1000> "Clocks" 0xFFFFFFFF
