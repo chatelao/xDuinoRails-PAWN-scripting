@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-firmware:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,17 +24,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs build-essential
-
-      - name: Build Pawn Compiler
-        run: |
-          git clone --depth 1 https://codeberg.org/compuphase/pawn.git
-          cd pawn/compiler
-          mkdir build
-          cd build
-          cmake .. -DPAWN_CELLSIZE=32
-          make pawncc
-          sudo cp pawncc /usr/local/bin/pawncc
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs
 
       - name: Compile Pawn Script
         run: |

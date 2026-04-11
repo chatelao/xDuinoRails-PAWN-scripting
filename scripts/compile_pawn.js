@@ -3,19 +3,21 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const projectRoot = process.cwd();
+const pawnccPath = path.join(projectRoot, 'pawn_build_final/pawncc');
 const inputPath = path.join(projectRoot, 'scripts/blink.p');
 const outputPath = path.join(projectRoot, 'scripts/blink.amx');
 const headerPath = path.join(projectRoot, 'src/blink_amx.h');
-const includePath = path.join(projectRoot, 'web/include');
 
 try {
-    console.log('Compiling Pawn script...');
+    console.log('Compiling Pawn script using native compiler (O0)...');
 
-    // Use pawncc from PATH (built in CI)
-    let command = `pawncc "${inputPath}" -o"${outputPath}"`;
-    if (fs.existsSync(includePath)) {
-        command += ` -i"${includePath}"`;
+    if (process.platform === 'linux') {
+        try { execSync(`chmod +x "${pawnccPath}"`); } catch (e) {}
     }
+
+    // Try with -O0 to avoid optimizer assertions in newer pawncc versions
+    // or when built from source with certain flags
+    let command = `"${pawnccPath}" "${inputPath}" -o"${outputPath}" -O0`;
 
     console.log('Running:', command);
     execSync(command, { stdio: 'inherit' });
