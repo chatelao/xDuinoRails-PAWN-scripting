@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-firmware:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,6 +54,7 @@ jobs:
       - name: Setup Renode
         uses: antmicro/renode-test-action@v4
         with:
+          # renode-version: '1.16.1' # Default might be better if 1.16.1 is missing rp2040
           tests-to-run: 'tests/pawn_test.robot'
 
       - name: List Renode Platforms (Debug)

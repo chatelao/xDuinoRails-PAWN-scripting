@@ -9,18 +9,14 @@ const outputPath = path.join(projectRoot, 'scripts/blink.amx');
 const headerPath = path.join(projectRoot, 'src/blink_amx.h');
 
 try {
-    console.log('Compiling Pawn script using native compiler (O0)...');
+    console.log('Compiling Pawn script...');
 
     if (process.platform === 'linux') {
         try { execSync(`chmod +x "${pawnccPath}"`); } catch (e) {}
     }
 
-    // Try with -O0 to avoid optimizer assertions in newer pawncc versions
-    // or when built from source with certain flags
-    let command = `"${pawnccPath}" "${inputPath}" -o"${outputPath}" -O0`;
-
-    console.log('Running:', command);
-    execSync(command, { stdio: 'inherit' });
+    // Use the committed binary which is known to work on 22.04
+    execSync(`"${pawnccPath}" "${inputPath}" -o"${outputPath}" -O2`, { stdio: 'inherit' });
 
     const amxData = fs.readFileSync(outputPath);
     console.log('Successfully compiled blink.p to blink.amx (' + amxData.length + ' bytes)');
