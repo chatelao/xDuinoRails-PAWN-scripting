@@ -22,7 +22,8 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs python3-psutil python3-robotframework python3-yaml
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs python3-pip
+          pip3 install psutil robotframework pyyaml
 
       - name: Compile Pawn Script
         run: |
