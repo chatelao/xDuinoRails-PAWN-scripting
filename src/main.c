@@ -17,6 +17,27 @@
 static uint8_t script_buffer[SCRIPT_MAX_SIZE];
 static size_t script_len = 0;
 
+// Renode detection
+static bool is_renode = false;
+
+static void detect_renode() {
+    volatile uint32_t *sysinfo = (volatile uint32_t *)0x40004000;
+    if (*sysinfo == 0xDEADBEEF) {
+        is_renode = true;
+    }
+}
+
+static void safe_delay_ms(uint32_t ms) {
+    if (is_renode) {
+        // Busy wait for Renode since timer might not be fully functional
+        for (volatile uint32_t i = 0; i < ms * 1000; i++) {
+            __asm("nop");
+        }
+    } else {
+        sleep_ms(ms);
+    }
+}
+
 // Native function: set_led(status)
 static cell AMX_NATIVE_CALL n_set_led(AMX *amx, const cell *params) {
     (void)amx;
@@ -28,7 +49,7 @@ static cell AMX_NATIVE_CALL n_set_led(AMX *amx, const cell *params) {
 // Native function: delay(ms)
 static cell AMX_NATIVE_CALL n_delay(AMX *amx, const cell *params) {
     (void)amx;
-    sleep_ms(params[1]);
+    safe_delay_ms(params[1]);
     return 0;
 }
 
@@ -135,45 +156,65 @@ void dummy_on_direction_change(AMX *amx) {
 
 int main() {
     stdio_init_all();
+    detect_renode();
     srand(time_us_64());
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
-    printf("\n\nPawn LED Runtime Starting...\n");
+    printf("\n\nBooting...\n");
+    printf("Pawn LED Runtime Starting...\n");
+    fflush(stdout);
 
-    // Try to load script from FLASH
-    if (flash_storage_load(script_buffer, &script_len, SCRIPT_MAX_SIZE) == 0) {
-        printf("Loaded script from FLASH (%d bytes)\n", (int)script_len);
+    // Try to load script from FLASH (skip if in Renode)
+    if (!is_renode) {
+        if (flash_storage_load(script_buffer, &script_len, SCRIPT_MAX_SIZE) == 0) {
+            printf("Loaded script from FLASH (%d bytes)\n", (int)script_len);
+        } else {
+            printf("No script found in FLASH.\n");
+        }
     } else {
-        printf("No script found in FLASH.\n");
+        printf("Renode detected, skipping FLASH load.\n");
     }
 
-    printf("Press 'u' within 5 seconds to upload a new script via YMODEM...\n");
-
-    int64_t start_time = time_us_64();
     bool upload_mode = false;
-    while (time_us_64() - start_time < 5000000) {
-        int c = getchar_timeout_us(0);
-        if (c == 'u') {
-            upload_mode = true;
-            break;
+    if (!is_renode) {
+        printf("Press 'u' within 5 seconds to upload a new script via YMODEM...\n");
+
+        int64_t start_time = time_us_64();
+        while (time_us_64() - start_time < 5000000) {
+            int c = getchar_timeout_us(0);
+            if (c == 'u') {
+                upload_mode = true;
+                break;
+            }
+            if (c == 's') {
+                break;
+            }
+            tight_loop_contents();
         }
-        tight_loop_contents();
     }
 
     if (upload_mode) {
         printf("Entering YMODEM upload mode. Start your YMODEM transfer now...\n");
 
+#if PICO_STDIO_USB
         extern stdio_driver_t stdio_usb;
         stdio_set_translate_crlf(&stdio_usb, false);
+#endif
+#if PICO_STDIO_UART
         extern stdio_driver_t stdio_uart;
         stdio_set_translate_crlf(&stdio_uart, false);
+#endif
 
         char filename[64];
         int res = ymodem_receive(script_buffer, SCRIPT_MAX_SIZE, filename);
 
+#if PICO_STDIO_USB
         stdio_set_translate_crlf(&stdio_usb, true);
+#endif
+#if PICO_STDIO_UART
         stdio_set_translate_crlf(&stdio_uart, true);
+#endif
 
         if (res > 0) {
             printf("\nSuccessfully received %d bytes: %s\n", res, filename);
@@ -202,9 +243,9 @@ int main() {
     printf("Entering heartbeat loop...\n");
     while (true) {
         gpio_put(LED_PIN, 1);
-        sleep_ms(100);
+        safe_delay_ms(100);
         gpio_put(LED_PIN, 0);
-        sleep_ms(900);
+        safe_delay_ms(900);
     }
 
     return 0;
