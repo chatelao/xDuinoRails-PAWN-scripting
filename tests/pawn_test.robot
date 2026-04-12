@@ -14,8 +14,8 @@ Should Blink LED Via Pawn Script
     [Documentation]             Verifies that the Pawn script correctly toggles the LED by checking UART output.
     [Tags]                      pawn  led  blink
     Execute Command             mach create
-    Execute Command             machine LoadPlatformDescription @"${REPL}"
-    Execute Command             sysbus LoadELF @"${BIN}"
+    Execute Command             machine LoadPlatformDescription @${REPL}
+    Execute Command             sysbus LoadELF @${BIN}
     # Increase log level for debugging
     Execute Command             logLevel 3
     Create Terminal Tester      ${UART}
