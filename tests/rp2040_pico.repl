@@ -4,15 +4,10 @@ cpu: CPU.CortexM @ sysbus
     cpuType: "cortex-m0+"
     nvic: nvic
     id: 0
-
-cpu:
     PerformanceInMips: 125
 
 nvic:
     -> cpu@0
-
-uart0:
-    IRQ -> nvic@20
 
 sram: Memory.MappedMemory @ sysbus 0x20000000
     size: 0x42000
@@ -21,6 +16,7 @@ flash: Memory.MappedMemory @ sysbus 0x10000000
     size: 0x200000
 
 uart0: UART.PL011 @ sysbus 0x40034000
+    IRQ -> nvic@20
 
 sysbus:
     init:
@@ -30,6 +26,8 @@ sysbus:
         Tag <0x4000c000 0x1000> "Resets" 0xFFFFFFFF
         Tag <0x40004000 0x1000> "SysInfo" 0xDEADBEEF
         Tag <0x40000000 0x1000> "SysCfg"
+        Tag <0x40028000 0x1000> "PLL_SYS" 0xFFFFFFFF
+        Tag <0x4002c000 0x1000> "PLL_USB" 0xFFFFFFFF
         Tag <0x40030000 0x1000> "UART1"
         Tag <0x4003c000 0x1000> "SPI0"
         Tag <0x40040000 0x1000> "SPI1"
