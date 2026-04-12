@@ -63,13 +63,61 @@ static cell AMX_NATIVE_CALL n_cv(AMX *amx, const cell *params) {
     return rand() % 256;
 }
 
+// Native function: set_output(id, state)
+static cell AMX_NATIVE_CALL n_set_output(AMX *amx, const cell *params) {
+    (void)amx;
+    printf("OUTPUT %d STATE: %d\n", (int)params[1], (int)params[2]);
+    return 0;
+}
+
+// Native function: get_function(id)
+static cell AMX_NATIVE_CALL n_get_function(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return rand() % 2;
+}
+
+// Native function: actual_speed()
+static cell AMX_NATIVE_CALL n_actual_speed(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return rand() % 127;
+}
+
+// Native function: load()
+static cell AMX_NATIVE_CALL n_load(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return rand() % 100;
+}
+
+// Native function: temperature()
+static cell AMX_NATIVE_CALL n_temperature(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return 20 + (rand() % 60);
+}
+
+// Native function: voltage()
+static cell AMX_NATIVE_CALL n_voltage(AMX *amx, const cell *params) {
+    (void)amx;
+    (void)params;
+    return 12000 + (rand() % 4000); // mV
+}
+
 static const AMX_NATIVE_INFO led_natives[] = {
-    { "set_led",   n_set_led },
-    { "delay",     n_delay },
-    { "print",     n_print },
-    { "speed",     n_speed },
-    { "direction", n_direction },
-    { "CV",        n_cv },
+    { "set_led",      n_set_led },
+    { "delay",        n_delay },
+    { "print",        n_print },
+    { "speed",        n_speed },
+    { "direction",    n_direction },
+    { "CV",           n_cv },
+    { "set_output",   n_set_output },
+    { "get_function", n_get_function },
+    { "actual_speed", n_actual_speed },
+    { "load",         n_load },
+    { "temperature",  n_temperature },
+    { "voltage",      n_voltage },
     { NULL, NULL }
 };
 
@@ -121,6 +169,16 @@ void dummy_on_speed_change(AMX *amx) {
     int index;
     cell ret;
     if (amx_FindPublic(amx, "onSpeedChange", &index) == AMX_ERR_NONE) {
+        amx_Exec(amx, &ret, index);
+    }
+}
+
+void dummy_on_function_change(AMX *amx, int id, int state) {
+    int index;
+    cell ret;
+    if (amx_FindPublic(amx, "onFunctionChange", &index) == AMX_ERR_NONE) {
+        amx_Push(amx, state);
+        amx_Push(amx, id);
         amx_Exec(amx, &ret, index);
     }
 }
