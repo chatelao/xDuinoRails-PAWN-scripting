@@ -22,7 +22,8 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs python3-pip
+          pip3 install psutil robotframework pyyaml
 
       - name: Compile Pawn Script
         run: |
@@ -36,9 +37,10 @@ jobs:
           key: ${{ runner.os }}-pico-sdk
 
       - name: Fetch Pico SDK
-        if: steps.cache-pico-sdk.outputs.cache-hit != 'true'
         run: |
-          git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git
+          if [ ! -d "pico-sdk" ]; then
+            git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git
+          fi
           cd pico-sdk
           git submodule update --init
 
