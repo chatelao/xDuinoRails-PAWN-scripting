@@ -8,6 +8,23 @@
 #include "ymodem.h"
 #include "flash_storage.h"
 
+bool is_renode = false;
+
+static bool detect_renode(void) {
+    uint32_t *sysinfo = (uint32_t *)0x40004000;
+    return *sysinfo == 0xDEADBEEF;
+}
+
+static void safe_delay_ms(uint32_t ms) {
+    if (is_renode) {
+        for (volatile uint32_t i = 0; i < ms * 1000; i++) {
+            __asm("nop");
+        }
+    } else {
+        sleep_ms(ms);
+    }
+}
+
 // Default LED pin for Seeed Studio XIAO RP2040
 #ifndef LED_PIN
 #define LED_PIN 25
@@ -28,7 +45,7 @@ static cell AMX_NATIVE_CALL n_set_led(AMX *amx, const cell *params) {
 // Native function: delay(ms)
 static cell AMX_NATIVE_CALL n_delay(AMX *amx, const cell *params) {
     (void)amx;
-    sleep_ms(params[1]);
+    safe_delay_ms(params[1]);
     return 0;
 }
 
@@ -193,47 +210,64 @@ void dummy_on_direction_change(AMX *amx) {
 
 int main() {
     stdio_init_all();
+    is_renode = detect_renode();
     srand(time_us_64());
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
     printf("\n\nPawn LED Runtime Starting...\n");
+    fflush(stdout);
 
-    // Try to load script from FLASH
-    if (flash_storage_load(script_buffer, &script_len, SCRIPT_MAX_SIZE) == 0) {
-        printf("Loaded script from FLASH (%d bytes)\n", (int)script_len);
-    } else {
-        printf("No script found in FLASH.\n");
-    }
-
-    printf("Press 'u' within 5 seconds to upload a new script via YMODEM...\n");
-
-    int64_t start_time = time_us_64();
-    bool upload_mode = false;
-    while (time_us_64() - start_time < 5000000) {
-        int c = getchar_timeout_us(0);
-        if (c == 'u') {
-            upload_mode = true;
-            break;
+    if (!is_renode) {
+        // Try to load script from FLASH
+        if (flash_storage_load(script_buffer, &script_len, SCRIPT_MAX_SIZE) == 0) {
+            printf("Loaded script from FLASH (%d bytes)\n", (int)script_len);
+        } else {
+            printf("No script found in FLASH.\n");
         }
-        tight_loop_contents();
     }
 
-    if (upload_mode) {
-        printf("Entering YMODEM upload mode. Start your YMODEM transfer now...\n");
+    if (!is_renode) {
+        printf("Press 'u' within 5 seconds to upload a new script via YMODEM...\n");
+        fflush(stdout);
 
-        extern stdio_driver_t stdio_usb;
-        stdio_set_translate_crlf(&stdio_usb, false);
-        extern stdio_driver_t stdio_uart;
-        stdio_set_translate_crlf(&stdio_uart, false);
+        int64_t start_time = time_us_64();
+        bool upload_mode = false;
+        while (time_us_64() - start_time < 5000000) {
+            int c = getchar_timeout_us(0);
+            if (c == 'u') {
+                upload_mode = true;
+                break;
+            } else if (c == 's') {
+                break;
+            }
+            tight_loop_contents();
+        }
 
-        char filename[64];
-        int res = ymodem_receive(script_buffer, SCRIPT_MAX_SIZE, filename);
+        if (upload_mode) {
+            printf("Entering YMODEM upload mode. Start your YMODEM transfer now...\n");
+            fflush(stdout);
 
-        stdio_set_translate_crlf(&stdio_usb, true);
-        stdio_set_translate_crlf(&stdio_uart, true);
+#if PICO_STDIO_USB
+            extern stdio_driver_t stdio_usb;
+            stdio_set_translate_crlf(&stdio_usb, false);
+#endif
+#if PICO_STDIO_UART
+            extern stdio_driver_t stdio_uart;
+            stdio_set_translate_crlf(&stdio_uart, false);
+#endif
 
-        if (res > 0) {
+            char filename[64];
+            int res = ymodem_receive(script_buffer, SCRIPT_MAX_SIZE, filename);
+
+#if PICO_STDIO_USB
+            stdio_set_translate_crlf(&stdio_usb, true);
+#endif
+#if PICO_STDIO_UART
+            stdio_set_translate_crlf(&stdio_uart, true);
+#endif
+
+            if (res > 0) {
             printf("\nSuccessfully received %d bytes: %s\n", res, filename);
             script_len = res;
 
@@ -258,11 +292,12 @@ int main() {
     }
 
     printf("Entering heartbeat loop...\n");
+    fflush(stdout);
     while (true) {
         gpio_put(LED_PIN, 1);
-        sleep_ms(100);
+        safe_delay_ms(100);
         gpio_put(LED_PIN, 0);
-        sleep_ms(900);
+        safe_delay_ms(900);
     }
 
     return 0;
