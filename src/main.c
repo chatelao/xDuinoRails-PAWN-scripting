@@ -281,6 +281,7 @@ int main() {
             printf("\nYMODEM upload failed with error %d\n", res);
         }
     }
+    }
 
     if (script_len > 0) {
         run_script(script_buffer, script_len);
