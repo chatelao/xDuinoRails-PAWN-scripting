@@ -43,6 +43,7 @@ static void safe_delay_ms(uint32_t ms) {
 static cell AMX_NATIVE_CALL n_set_led(AMX *amx, const cell *params) {
     (void)amx;
     printf("LED STATE: %d\n", (int)params[1]);
+    fflush(stdout);
     gpio_put(LED_PIN, params[1]);
     return 0;
 }
@@ -60,6 +61,7 @@ static cell AMX_NATIVE_CALL n_print(AMX *amx, const cell *params) {
     amx_StrParam(amx, params[1], str);
     if (str != NULL) {
         printf("%s", str);
+        fflush(stdout);
     }
     return 0;
 }
@@ -102,6 +104,7 @@ int AMXEXPORT amx_CoreCleanup(AMX *amx);
 void amx_ErrorHandler(AMX *amx, int error) {
     (void)amx;
     printf("Pawn error %d\n", error);
+    fflush(stdout);
 }
 
 void run_script(void *program, size_t size) {
@@ -112,6 +115,7 @@ void run_script(void *program, size_t size) {
     void *program_copy = malloc(size);
     if (program_copy == NULL) {
         printf("Failed to allocate memory for Pawn program\n");
+        fflush(stdout);
         return;
     }
     memcpy(program_copy, program, size);
@@ -120,6 +124,7 @@ void run_script(void *program, size_t size) {
     err = amx_Init(&amx, program_copy);
     if (err != AMX_ERR_NONE) {
         printf("amx_Init failed with error %d\n", err);
+        fflush(stdout);
         free(program_copy);
         return;
     }
@@ -127,12 +132,15 @@ void run_script(void *program, size_t size) {
     amx_Register(&amx, led_natives, -1);
 
     printf("Executing Pawn script...\n");
+    fflush(stdout);
     err = amx_Exec(&amx, &ret, AMX_EXEC_MAIN);
     if (err != AMX_ERR_NONE) {
         printf("amx_Exec failed with error %d\n", err);
+        fflush(stdout);
     }
 
     printf("Pawn script finished with return value %ld\n", (long)ret);
+    fflush(stdout);
 
     amx_Cleanup(&amx);
     free(program_copy);
@@ -184,10 +192,12 @@ int main() {
     } else {
         printf("Renode detected, skipping FLASH load.\n");
     }
+    fflush(stdout);
 
     bool upload_mode = false;
     if (!is_renode) {
         printf("Press 'u' within 5 seconds to upload a new script via YMODEM...\n");
+        fflush(stdout);
 
         int64_t start_time = time_us_64();
         while (time_us_64() - start_time < 5000000) {
@@ -205,6 +215,7 @@ int main() {
 
     if (upload_mode) {
         printf("Entering YMODEM upload mode. Start your YMODEM transfer now...\n");
+        fflush(stdout);
 
 #if PICO_STDIO_USB
         extern stdio_driver_t stdio_usb;
@@ -238,18 +249,22 @@ int main() {
         } else {
             printf("\nYMODEM upload failed with error %d\n", res);
         }
+        fflush(stdout);
     }
 
     if (script_len > 0) {
         run_script(script_buffer, script_len);
     } else if (blink_amx_len > 0) {
         printf("Running embedded script...\n");
+        fflush(stdout);
         run_script(blink_amx, blink_amx_len);
     } else {
         printf("No script to run.\n");
+        fflush(stdout);
     }
 
     printf("Entering heartbeat loop...\n");
+    fflush(stdout);
     while (true) {
         gpio_put(LED_PIN, 1);
         safe_delay_ms(100);
