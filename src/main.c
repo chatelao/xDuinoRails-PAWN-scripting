@@ -30,7 +30,8 @@ static void detect_renode() {
 static void safe_delay_ms(uint32_t ms) {
     if (is_renode) {
         // Busy wait for Renode since timer might not be fully functional
-        for (volatile uint32_t i = 0; i < ms * 1000; i++) {
+        // In Renode, we want enough instructions to pass virtual time
+        for (volatile uint32_t i = 0; i < ms * 10000; i++) {
             __asm("nop");
         }
     } else {
@@ -155,13 +156,21 @@ void dummy_on_direction_change(AMX *amx) {
 }
 
 int main() {
-    stdio_init_all();
     detect_renode();
-    srand(time_us_64());
+    stdio_init_all();
+
+    printf("\n\nBooting...\n");
+    fflush(stdout);
+
+    if (is_renode) {
+        srand(42);
+    } else {
+        srand(time_us_64());
+    }
+
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
-    printf("\n\nBooting...\n");
     printf("Pawn LED Runtime Starting...\n");
     fflush(stdout);
 
