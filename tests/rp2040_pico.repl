@@ -4,6 +4,7 @@ cpu: CPU.CortexM @ sysbus
     cpuType: "cortex-m0+"
     nvic: nvic
     id: 0
+    performanceInMips: 125
 
 nvic:
     -> cpu@0
@@ -23,6 +24,7 @@ sysbus:
         Tag <0x40004000 0x1000> "SysCfg" 0xFFFFFFFF
         Tag <0x40008000 0x1000> "Clocks" 0xFFFFFFFF
         Tag <0x4000c000 0x1000> "Resets" 0x00FFFFFF
+        Tag <0x40010000 0x1000> "BusCtrl" 0xFFFFFFFF
         Tag <0x40014000 0x1000> "IO_BANK0" 0xFFFFFFFF
         Tag <0x40018000 0x1000> "IO_QSPI" 0xFFFFFFFF
         Tag <0x4001c000 0x1000> "PADS_BANK0" 0xFFFFFFFF
