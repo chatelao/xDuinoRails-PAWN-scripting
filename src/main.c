@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pico/stdlib.h"
+#include "pico/stdio_uart.h"
 #include "hardware/gpio.h"
+#include "hardware/uart.h"
 #include "third_party/pawn/amx.h"
 #include "blink_amx.h"
 #include "ymodem.h"
@@ -211,10 +213,16 @@ void dummy_on_direction_change(AMX *amx) {
 
 int main() {
     detect_renode();
-    stdio_init_all();
     if (is_renode) {
-        printf("UART_OK\r\n");
-        fflush(stdout);
+        // Direct UART access to ensure signal is sent even if stdio_init_all hangs
+        uart_init(uart0, 115200);
+        gpio_set_function(0, GPIO_FUNC_UART); // TX
+        gpio_set_function(1, GPIO_FUNC_UART); // RX
+        uart_puts(uart0, "UART_OK\r\n");
+        // Initialize only UART stdio in Renode to avoid USB-related hangs
+        stdio_uart_init();
+    } else {
+        stdio_init_all();
     }
     if (is_renode) {
         srand(42); // Fixed seed for Renode

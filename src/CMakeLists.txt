@@ -27,7 +27,7 @@ target_include_directories(pawn_led PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pawn
 )
 
-target_link_libraries(pawn_led pico_stdlib hardware_gpio hardware_flash hardware_sync)
+target_link_libraries(pawn_led pico_stdlib hardware_gpio hardware_flash hardware_sync hardware_uart)
 
 # Enable USB and UART stdio
 pico_enable_stdio_usb(pawn_led 1)
