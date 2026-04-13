@@ -16,13 +16,16 @@ Should Blink LED Via Pawn Script
     Execute Command             mach create
     Execute Command             machine LoadPlatformDescription @${REPL}
     Execute Command             sysbus LoadELF @${BIN}
-    # Maximum diagnostic output
-    Execute Command             logLevel 0
+    # Reset handler is at 0x100001f6 (Thumb). NM showed 0x100001f6.
+    # LoadELF should set PC but if it fails we force it.
+    Execute Command             cpu PC 0x100001f6
+    Execute Command             cpu SP 0x20042000
+    Execute Command             logLevel 3
     Create Terminal Tester      ${UART}
     Start Emulation
-    # Wait for diagnostic output
-    Wait For Line On Uart       UART_OK  timeout=120
-    Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=120
+    # Wait for line instead of any char to avoid keyword issues
+    Wait For Line On Uart       UART_OK  timeout=60
+    Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=60
     Wait For Line On Uart       Executing Pawn script...
     Wait For Line On Uart       LED STATE: 1
     Wait For Line On Uart       LED STATE: 0
