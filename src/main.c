@@ -230,6 +230,8 @@ int main() {
         fflush(stdout);
     } else {
         stdio_init_all();
+        printf("Booting...\r\n");
+        fflush(stdout);
     }
     if (is_renode) {
         srand(42); // Fixed seed for Renode

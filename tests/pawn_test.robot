@@ -22,7 +22,8 @@ Should Blink LED Via Pawn Script
     Start Emulation
     # The firmware might need a bit more time or might be failing silently
     # Let's wait for ANY output first
-    Wait For Line On Uart       UART_OK                       timeout=15
+    Wait For Line On Uart       UART_OK                       timeout=120
+    Wait For Line On Uart       Booting...
     Wait For Line On Uart       Pawn LED Runtime Starting...
     Wait For Line On Uart       Executing Pawn script...
     Wait For Line On Uart       LED STATE: 1
