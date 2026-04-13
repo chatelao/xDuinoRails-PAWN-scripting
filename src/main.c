@@ -218,9 +218,10 @@ int main() {
         uart_init(uart0, 115200);
         gpio_set_function(0, GPIO_FUNC_UART); // TX
         gpio_set_function(1, GPIO_FUNC_UART); // RX
-        uart_puts(uart0, "UART_OK\r\n");
         // Initialize only UART stdio in Renode to avoid USB-related hangs
         stdio_uart_init();
+        printf("UART_OK\r\n");
+        fflush(stdout);
     } else {
         stdio_init_all();
     }
