@@ -218,11 +218,12 @@ void dummy_on_direction_change(AMX *amx) {
 int main() {
     detect_renode();
     if (is_renode) {
-        // Direct UART access to ensure signal is sent even if stdio_init_all hangs
-        uart_init(uart0, 115200);
-        gpio_set_function(0, GPIO_FUNC_UART); // TX
-        gpio_set_function(1, GPIO_FUNC_UART); // RX
-        uart_puts(uart0, "UART_OK\r\n");
+        // Low-level UART write for robust synchronization
+        volatile uint32_t *uart_dr = (volatile uint32_t *)0x40034000;
+        const char *sync_msg = "UART_OK\r\n";
+        while (*sync_msg) {
+            *uart_dr = *sync_msg++;
+        }
 
         // Initialize only UART stdio in Renode to avoid USB-related hangs
         stdio_uart_init();
@@ -336,9 +337,9 @@ int main() {
     fflush(stdout);
     while (true) {
         gpio_put(LED_PIN, 1);
-        sleep_ms(100);
+        safe_delay_ms(100);
         gpio_put(LED_PIN, 0);
-        sleep_ms(900);
+        safe_delay_ms(900);
     }
 
     return 0;
