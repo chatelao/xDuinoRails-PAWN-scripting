@@ -10,8 +10,12 @@ machine StartGdbServer 3333
 # Load the ELF file
 sysbus LoadELF @build/pawn_led.elf
 
-# Increase log level
-logLevel 3
+# Set logging level to see more details
+logLevel 1
+# Log access to unhandled peripherals
+sysbus LogUnhandledAccess
 
 # Show the UART analyzer
 showAnalyzer sysbus.uart0
+
+echo "Renode is ready. Connect GDB to port 3333."
