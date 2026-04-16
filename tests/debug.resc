@@ -1,0 +1,17 @@
+mach create
+machine LoadPlatformDescription @tests/rp2040_pico.repl
+
+# Set up the SVD for register debugging
+cpu SetSVD @tests/rp2040.svd
+
+# Start the GDB server on port 3333
+machine StartGdbServer 3333
+
+# Load the ELF file
+sysbus LoadELF @build/pawn_led.elf
+
+# Increase log level
+logLevel 3
+
+# Show the UART analyzer
+showAnalyzer sysbus.uart0
