@@ -10,10 +10,8 @@ machine StartGdbServer 3333
 # Load the ELF file
 sysbus LoadELF @build/pawn_led.elf
 
-# Set logging level to see more details
+# Set logging level
 logLevel 1
-# Log access to unhandled peripherals
-sysbus LogUnhandledAccess
 
 # Show the UART analyzer
 showAnalyzer sysbus.uart0
