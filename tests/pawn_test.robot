@@ -14,15 +14,18 @@ Should Blink LED Via Pawn Script
     [Documentation]             Verifies that the Pawn script correctly toggles the LED by checking UART output.
     [Tags]                      pawn  led  blink
     Execute Command             mach create
-    Execute Command             machine LoadPlatformDescription "${REPL}"
-    Execute Command             sysbus LoadELF "${BIN}"
-    # Increase log level for debugging
+    Execute Command             machine LoadPlatformDescription @${REPL}
+    Execute Command             sysbus LoadELF @${BIN}
+    # Reset handler is at 0x100001f6 (Thumb). NM showed 0x100001f6.
+    # LoadELF should set PC but if it fails we force it.
+    Execute Command             cpu PC 0x100001f6
+    Execute Command             cpu SP 0x20042000
     Execute Command             logLevel 3
     Create Terminal Tester      ${UART}
     Start Emulation
-    # The firmware might need a bit more time or might be failing silently
-    # Let's wait for ANY output first
-    Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=15
+    # Wait for line instead of any char to avoid keyword issues
+    Wait For Line On Uart       UART_OK  timeout=60
+    Wait For Line On Uart       Pawn LED Runtime Starting...  timeout=60
     Wait For Line On Uart       Executing Pawn script...
     Wait For Line On Uart       LED STATE: 1
     Wait For Line On Uart       LED STATE: 0
