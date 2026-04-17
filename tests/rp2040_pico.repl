@@ -14,7 +14,6 @@ sram: Memory.MappedMemory @ sysbus 0x20000000
 flash: Memory.MappedMemory @ sysbus 0x10000000
     size: 0x200000
 
-# Map a memory block at 0 to avoid aborts on vector fetch
 boot_ram: Memory.MappedMemory @ sysbus 0x0
     size: 0x1000
 
@@ -23,10 +22,7 @@ uart0: UART.PL011 @ sysbus 0x40034000
 
 sysbus:
     init:
-        # Renode detection at SysInfo (RP2040 address)
         Tag <0x40000000 0x1000> "SysInfo" 0xDEADBEEF
-
-        # Mock other critical peripherals
         Tag <0x40004000 0x1000> "SysCfg" 0xFFFFFFFF
         Tag <0x40008000 0x1000> "Clocks" 0xFFFFFFFF
         Tag <0x4000c000 0x1000> "Resets" 0xFFFFFFFF
