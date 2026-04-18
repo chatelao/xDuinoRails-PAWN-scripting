@@ -215,14 +215,23 @@ void dummy_on_direction_change(AMX *amx) {
     }
 }
 
+static void uart_puts_raw(const char *s) {
+    volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
+    uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
+    while (*s) {
+        // Poll UARTFR (offset 0x18) bit 5 (TXFF)
+        while (uart0_base[6] & (1 << 5)) {
+            __asm("nop");
+        }
+        uart0_base[0] = *s++; // UARTDR
+    }
+}
+
 int main() {
     // Low-level UART enable and write for robust synchronization in Renode
     // This MUST be the very first thing to ensure the test can synchronize
-    volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
-    uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
-    const char *sync_msg = "UART_OK\r\n";
-    while (*sync_msg) {
-        uart0_base[0] = *sync_msg++; // UARTDR
+    for (int i = 0; i < 3; i++) {
+        uart_puts_raw("UART_OK\r\n");
     }
 
     detect_renode();
