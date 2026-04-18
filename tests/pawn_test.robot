@@ -17,7 +17,7 @@ Should Blink LED Via Pawn Script
     Execute Command             machine LoadPlatformDescription @${REPL}
     Execute Command             sysbus LoadELF @${BIN}
     # Increase log level for debugging
-    Execute Command             logLevel 3
+    Execute Command             logLevel 0
     Create Terminal Tester      ${UART}
     Start Emulation
     # The firmware might need a bit more time or might be failing silently

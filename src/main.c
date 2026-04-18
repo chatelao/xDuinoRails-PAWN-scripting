@@ -216,13 +216,17 @@ void dummy_on_direction_change(AMX *amx) {
 }
 
 int main() {
+    // Low-level UART enable and write for robust synchronization in Renode
+    // This MUST be the very first thing to ensure the test can synchronize
+    volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
+    uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
+    const char *sync_msg = "UART_OK\r\n";
+    while (*sync_msg) {
+        uart0_base[0] = *sync_msg++; // UARTDR
+    }
+
     detect_renode();
     if (is_renode) {
-        // Low-level UART enable and write for robust synchronization in Renode
-        // This ensures the signal is sent even if stdio_uart_init hangs or fails
-        uart_init(uart0, 115200);
-        uart_puts(uart0, "UART_OK\r\n");
-
         // Initialize only UART stdio in Renode to avoid USB-related hangs
         stdio_uart_init();
         printf("Booting...\r\n");
