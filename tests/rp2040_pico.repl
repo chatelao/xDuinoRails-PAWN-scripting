@@ -1,12 +1,15 @@
+// Refined RP2040 platform description for Renode
+// Based on https://github.com/matgla/Renode_RP2040/blob/main/cores/rp2040.repl
+
 nvic: IRQControllers.NVIC @ sysbus 0xe000e000
+    cpu: cpu
+    systickFrequency: 125000000
+    -> cpu@0
 
 cpu: CPU.CortexM @ sysbus
     cpuType: "cortex-m0+"
-    nvic: nvic
     id: 0
-
-nvic:
-    -> cpu@0
+    nvic: nvic
 
 sram: Memory.MappedMemory @ sysbus 0x20000000
     size: 0x42000
