@@ -215,16 +215,32 @@ void dummy_on_direction_change(AMX *amx) {
     }
 }
 
+static void uart_puts_raw(const char *s) {
+    volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
+    // Basic UART setup for Renode PL011
+    uart0_base[9] = 26;    // UARTIBRD (offset 0x24)
+    uart0_base[10] = 3;    // UARTFBRD (offset 0x28)
+    uart0_base[11] = 0x70; // UARTLCR_H (offset 0x2c): 8 bits, FIFO enable
+    uart0_base[12] = 0x301;// UARTCR (offset 0x30): TXE, RXE, UARTEN
+    while (*s) {
+        // Poll UARTFR (offset 0x18) bit 5 (TXFF)
+        while (uart0_base[6] & (1 << 5)) {
+            __asm("nop");
+        }
+        uart0_base[0] = *s++; // UARTDR
+    }
+}
+
 int main() {
     detect_renode();
     if (is_renode) {
+        // Small busy wait to allow emulator to stabilize
+        for (volatile int i = 0; i < 10000; i++) __asm("nop");
+
         // Low-level UART enable and write for robust synchronization in Renode
         // This ensures the signal is sent even if stdio_uart_init hangs or fails
-        volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
-        uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
-        const char *sync_msg = "UART_OK\r\n";
-        while (*sync_msg) {
-            uart0_base[0] = *sync_msg++; // UARTDR
+        for (int i = 0; i < 10; i++) {
+            uart_puts_raw("UART_OK\r\n");
         }
 
         // Initialize only UART stdio in Renode to avoid USB-related hangs
