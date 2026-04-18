@@ -7,6 +7,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+
 permissions:
   contents: read
   pages: write
@@ -23,10 +24,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi cmake python3-pip make
-
-      - name: Install Python Dependencies
-        run: |
-          pip3 install psutil robotframework pyyaml
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

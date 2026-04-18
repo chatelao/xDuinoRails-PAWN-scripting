@@ -220,12 +220,8 @@ int main() {
     if (is_renode) {
         // Low-level UART enable and write for robust synchronization in Renode
         // This ensures the signal is sent even if stdio_uart_init hangs or fails
-        volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
-        uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
-        const char *sync_msg = "UART_OK\r\n";
-        while (*sync_msg) {
-            uart0_base[0] = *sync_msg++; // UARTDR
-        }
+        uart_init(uart0, 115200);
+        uart_puts(uart0, "UART_OK\r\n");
 
         // Initialize only UART stdio in Renode to avoid USB-related hangs
         stdio_uart_init();
