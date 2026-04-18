@@ -235,11 +235,11 @@ int main() {
     detect_renode();
     if (is_renode) {
         // Small busy wait to allow emulator to stabilize
-        for (volatile int i = 0; i < 1000; i++) __asm("nop");
+        for (volatile int i = 0; i < 10000; i++) __asm("nop");
 
         // Low-level UART enable and write for robust synchronization in Renode
         // This ensures the signal is sent even if stdio_uart_init hangs or fails
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             uart_puts_raw("UART_OK\r\n");
         }
 
