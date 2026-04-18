@@ -24,6 +24,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi cmake nodejs
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Compile Pawn Script
         run: |
           node scripts/compile_pawn.js
@@ -38,15 +43,17 @@ jobs:
       - name: Fetch Pico SDK
         if: steps.cache-pico-sdk.outputs.cache-hit != 'true'
         run: |
-          git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git
+          if [ ! -d "pico-sdk" ]; then
+            git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git
+          fi
           cd pico-sdk
           git submodule update --init
 
       - name: Build Firmware
         run: |
-          mkdir build
+          mkdir -p build
           cd build
-          cmake ../src -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
+          cmake ../src -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk -DRENODE_CI=ON
           make
 
       - name: Setup Renode
@@ -89,7 +96,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Dependencies
