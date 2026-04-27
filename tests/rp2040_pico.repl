@@ -1,3 +1,5 @@
+sysbus: Bus.SystemBusController @ none
+
 nvic: IRQControllers.NVIC @ sysbus 0xe000e000
 
 cpu: CPU.CortexM @ sysbus
@@ -23,13 +25,13 @@ sysbus:
         Tag <0x40004000 0x1000> "SysCfg" 0xFFFFFFFF
         Tag <0x40008000 0x1000> "Clocks" 0xFFFFFFFF
         Tag <0x4000c000 0x1000> "Resets" 0x00FFFFFF
-        Tag <0x40010000 0x1000> "BusCtrl" 0xFFFFFFFF
+        Tag <0x40010000 0x1000> "PSM" 0xFFFFFFFF
         Tag <0x40014000 0x1000> "IO_BANK0" 0xFFFFFFFF
         Tag <0x4001c000 0x1000> "PADS_BANK0" 0xFFFFFFFF
-        Tag <0x40024000 0x1000> "XOSC" 0xFFFFFFFF
+        Tag <0x40024000 0x1000> "TAG_XOSC" 0xFFFFFFFF
         Tag <0x40028000 0x1000> "PLL_SYS" 0xFFFFFFFF
         Tag <0x4002c000 0x1000> "PLL_USB" 0xFFFFFFFF
         Tag <0x40054000 0x1000> "TIMER" 0xFFFFFFFF
         Tag <0x40058000 0x1000> "WATCHDOG" 0xFFFFFFFF
-        Tag <0x40060000 0x1000> "ROSC" 0xFFFFFFFF
+        Tag <0x40060000 0x1000> "TAG_ROSC" 0xFFFFFFFF
         Tag <0xd0000000 0x1000> "SIO" 0xFFFFFFFF

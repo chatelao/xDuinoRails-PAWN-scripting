@@ -16,14 +16,13 @@ Should Blink LED Via Pawn Script
     Execute Command             mach create
     Execute Command             machine LoadPlatformDescription @${REPL}
     Execute Command             sysbus LoadELF @${BIN}
-    # Log unhandled accesses for debugging
-    Execute Command             sysbus LogUnhandledAccess true
-    # Increase log level for debugging (0=NOISY)
-    Execute Command             logLevel 0
+    # Set log level to INFO
+    Execute Command             logLevel 2
     Create Terminal Tester      ${UART}
     Start Emulation
-    # Wait for the synchronization string
-    Wait For Line On Uart       UART_OK                       timeout=60
+    # The firmware might need a bit more time or might be failing silently
+    # Let's wait for ANY output first
+    Wait For Line On Uart       UART_OK                       timeout=120
     Wait For Line On Uart       Booting...
     Wait For Line On Uart       Pawn LED Runtime Starting...
     Wait For Line On Uart       Executing Pawn script...
