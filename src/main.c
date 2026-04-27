@@ -223,8 +223,11 @@ int main() {
     uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
     uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
 
+    // Busy-wait delay before sending to allow Renode to stabilize
+    for (volatile int j = 0; j < 100000; j++) __asm("nop");
+
     // Send multiple times to ensure Renode's terminal tester captures it
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         const char *sync_msg = "UART_OK\r\n";
         while (*sync_msg) {
             uart0_base[0] = *sync_msg++; // UARTDR
