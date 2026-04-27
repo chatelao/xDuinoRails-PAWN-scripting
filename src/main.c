@@ -222,9 +222,15 @@ int main() {
     volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
     uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
     uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
-    const char *sync_msg = "UART_OK\r\n";
-    while (*sync_msg) {
-        uart0_base[0] = *sync_msg++; // UARTDR
+
+    // Send multiple times to ensure Renode's terminal tester captures it
+    for (int i = 0; i < 5; i++) {
+        const char *sync_msg = "UART_OK\r\n";
+        while (*sync_msg) {
+            uart0_base[0] = *sync_msg++; // UARTDR
+        }
+        // Small delay between attempts
+        for (volatile int j = 0; j < 10000; j++) __asm("nop");
     }
 
     detect_renode();
