@@ -16,8 +16,8 @@ Should Blink LED Via Pawn Script
     Execute Command             mach create
     Execute Command             machine LoadPlatformDescription @${REPL}
     Execute Command             sysbus LoadELF @${BIN}
-    # Increase log level for debugging (0=NOISY)
-    Execute Command             logLevel 0
+    # Increase log level for debugging (2=INFO)
+    Execute Command             logLevel 2
     Create Terminal Tester      ${UART}
     Start Emulation
     # Wait for the synchronization string
