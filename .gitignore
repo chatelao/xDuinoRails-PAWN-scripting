@@ -3,3 +3,9 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+build/
+pico-sdk/
+*.amx
+log.html
+report.html
+robot_output.xml

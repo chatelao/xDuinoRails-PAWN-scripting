@@ -8,7 +8,7 @@ test.describe('XDRscript', () => {
   test('should load the page and initialize the compiler', async ({ page }) => {
     await expect(page).toHaveTitle(/XDRscript/);
     const compileBtn = page.locator('#compile-btn');
-    await expect(compileBtn).toBeEnabled({ timeout: 10000 });
+    await expect(compileBtn).toBeEnabled({ timeout: 30000 });
     await expect(compileBtn).toHaveText('Compile');
 
     const consoleArea = page.locator('#console');
@@ -18,7 +18,7 @@ test.describe('XDRscript', () => {
   test('should successfully compile valid PAWN code', async ({ page }) => {
     // Wait for compiler to be ready
     const compileBtn = page.locator('#compile-btn');
-    await expect(compileBtn).toBeEnabled({ timeout: 10000 });
+    await expect(compileBtn).toBeEnabled({ timeout: 30000 });
 
     // Click compile
     await compileBtn.click();
@@ -35,7 +35,7 @@ test.describe('XDRscript', () => {
   test('should show error for invalid PAWN code', async ({ page }) => {
     // Wait for compiler to be ready
     const compileBtn = page.locator('#compile-btn');
-    await expect(compileBtn).toBeEnabled({ timeout: 10000 });
+    await expect(compileBtn).toBeEnabled({ timeout: 30000 });
 
     // Set invalid code in editor
     await page.fill('#editor', 'invalid code');

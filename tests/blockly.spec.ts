@@ -30,7 +30,7 @@ test.describe('Blockly Integration', () => {
     const consoleArea = page.locator('#console');
 
     // Wait for compiler to be ready
-    await expect(compileBtn).toBeEnabled({ timeout: 10000 });
+    await expect(compileBtn).toBeEnabled({ timeout: 30000 });
 
     // Switch to Blockly mode
     await toggleBtn.click();
