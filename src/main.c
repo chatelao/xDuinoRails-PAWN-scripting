@@ -216,20 +216,29 @@ void dummy_on_direction_change(AMX *amx) {
 }
 
 int main() {
-    detect_renode();
-    if (is_renode) {
-        // Low-level UART enable and write for robust synchronization in Renode
-        // This ensures the signal is sent even if stdio_uart_init hangs or fails
-        volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
-        uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
-        uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
+    // Early low-level UART sync for Renode
+    // Write directly to UART0 Data Register (0x40034000)
+    // No status polling to avoid hangs if clocks/resets are emulated as tags
+    volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
+    uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
+    uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
+
+    // Busy-wait delay before sending to allow Renode to stabilize
+    // A high loop count ensures virtual time advances sufficiently
+    for (volatile uint32_t j = 0; j < 1000000; j++) __asm("nop");
+
+    // Send multiple times to ensure Renode's terminal tester captures it
+    for (int i = 0; i < 20; i++) {
         const char *sync_msg = "UART_OK\r\n";
         while (*sync_msg) {
-            // Wait for UART to be ready to transmit (poll TXFF flag in UARTFR at offset 0x18)
-            while (uart0_base[6] & 0x20);
             uart0_base[0] = *sync_msg++; // UARTDR
         }
+        // Small delay between attempts
+        for (volatile uint32_t j = 0; j < 50000; j++) __asm("nop");
+    }
 
+    detect_renode();
+    if (is_renode) {
         // Initialize only UART stdio in Renode to avoid USB-related hangs
         stdio_uart_init();
         printf("Booting...\r\n");
