@@ -22,7 +22,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs lsof
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,7 +41,6 @@ jobs:
           key: ${{ runner.os }}-pico-sdk
 
       - name: Fetch Pico SDK
-        if: steps.cache-pico-sdk.outputs.cache-hit != 'true'
         run: |
           if [ ! -d "pico-sdk" ]; then
             git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git
@@ -59,7 +58,6 @@ jobs:
       - name: Setup Renode
         uses: antmicro/renode-test-action@v4
         with:
-          # renode-version: '1.16.1' # Default might be better if 1.16.1 is missing rp2040
           tests-to-run: 'tests/pawn_test.robot'
 
       - name: List Renode Platforms (Debug)
@@ -119,6 +117,9 @@ jobs:
       - name: Install Playwright system dependencies
         if: steps.cache-playwright.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
+
+      - name: Ensure Port 8080 is clear
+        run: kill $(lsof -t -i :8080) 2>/dev/null || true
 
       - name: Run Playwright tests
         run: npx playwright test

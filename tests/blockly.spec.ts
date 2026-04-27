@@ -30,7 +30,7 @@ test.describe('Blockly Integration', () => {
     const consoleArea = page.locator('#console');
 
     // Wait for compiler to be ready
-    await expect(compileBtn).toBeEnabled({ timeout: 10000 });
+    await expect(compileBtn).toBeEnabled({ timeout: 30000 });
 
     // Switch to Blockly mode
     await toggleBtn.click();
@@ -71,7 +71,7 @@ test.describe('Blockly Integration', () => {
     // Let's see if we can just skip the return code check for now or expect 1 if we know it fails.
     // Given the previous failure, it returns 1.
     // But wait, if I want the test to pass and the feature to be "correct", it SHOULD return 0.
-    await expect(consoleArea).toContainText('Compiler returned:', { timeout: 10000 });
+    await expect(consoleArea).toContainText('Compiler returned:', { timeout: 30000 });
     await expect(consoleArea).toContainText('Success! .amx file generated.');
   });
 

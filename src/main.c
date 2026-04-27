@@ -225,10 +225,8 @@ int main() {
         uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
         const char *sync_msg = "UART_OK\r\n";
         while (*sync_msg) {
-            // Wait for TX FIFO not full (bit 5 of UARTFR at offset 0x18/index 6)
-            while (uart0_base[6] & (1 << 5)) {
-                __asm("nop");
-            }
+            // Wait for UART to be ready to transmit (poll TXFF flag in UARTFR at offset 0x18)
+            while (uart0_base[6] & 0x20);
             uart0_base[0] = *sync_msg++; // UARTDR
         }
 
