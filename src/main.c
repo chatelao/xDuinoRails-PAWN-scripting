@@ -216,20 +216,19 @@ void dummy_on_direction_change(AMX *amx) {
 }
 
 int main() {
+    // Early low-level UART sync for Renode
+    // Write directly to UART0 Data Register (0x40034000)
+    // No status polling to avoid hangs if clocks/resets are emulated as tags
+    volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
+    uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
+    uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
+    const char *sync_msg = "UART_OK\r\n";
+    while (*sync_msg) {
+        uart0_base[0] = *sync_msg++; // UARTDR
+    }
+
     detect_renode();
     if (is_renode) {
-        // Low-level UART enable and write for robust synchronization in Renode
-        // This ensures the signal is sent even if stdio_uart_init hangs or fails
-        volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
-        uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
-        uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
-        const char *sync_msg = "UART_OK\r\n";
-        while (*sync_msg) {
-            // Wait for UART to be ready to transmit (poll TXFF flag in UARTFR at offset 0x18)
-            while (uart0_base[6] & 0x20);
-            uart0_base[0] = *sync_msg++; // UARTDR
-        }
-
         // Initialize only UART stdio in Renode to avoid USB-related hangs
         stdio_uart_init();
         printf("Booting...\r\n");
