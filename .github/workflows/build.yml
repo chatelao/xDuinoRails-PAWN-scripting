@@ -46,7 +46,7 @@ jobs:
             git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git
           fi
           cd pico-sdk
-          git submodule update --init
+          git submodule update --init --recursive
 
       - name: Build Firmware
         run: |
@@ -58,7 +58,6 @@ jobs:
       - name: Setup Renode
         uses: antmicro/renode-test-action@v4
         with:
-          renode-revision: 'v1.15.0'
           tests-to-run: 'tests/pawn_test.robot'
 
       - name: List Renode Platforms (Debug)
@@ -99,7 +98,10 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof
+          npm install
 
       - name: Get Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | cut -d' ' -f2)" >> $GITHUB_ENV
