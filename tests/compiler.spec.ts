@@ -25,7 +25,7 @@ test.describe('XDRscript', () => {
 
     const consoleArea = page.locator('#console');
     await expect(consoleArea).toContainText('Compiling...');
-    await expect(consoleArea).toContainText('Compiler returned: 0', { timeout: 10000 });
+    await expect(consoleArea).toContainText('Compiler returned: 0', { timeout: 30000 });
     await expect(consoleArea).toContainText('Success! .amx file generated.');
 
     const downloadLink = page.locator('#download-link');

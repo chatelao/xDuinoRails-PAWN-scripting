@@ -58,7 +58,7 @@ jobs:
       - name: Setup Renode
         uses: antmicro/renode-test-action@v4
         with:
-          renode-version: '1.15.0'
+          renode-revision: 'v1.15.0'
           tests-to-run: 'tests/pawn_test.robot'
 
       - name: List Renode Platforms (Debug)
