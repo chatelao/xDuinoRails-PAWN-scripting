@@ -32,7 +32,7 @@ static void detect_renode() {
 
 static void safe_delay_ms(uint32_t ms) {
     if (is_renode) {
-        for (volatile uint32_t i = 0; i < ms * 100; i++) {
+        for (volatile uint32_t i = 0; i < ms * 10000; i++) {
             __asm("nop");
         }
     } else {
@@ -225,9 +225,9 @@ int main() {
         uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
 
         // Initial delay to let Renode settle
-        for (volatile int i = 0; i < 10000; i++) __asm("nop");
+        for (volatile int i = 0; i < 1000000; i++) __asm("nop");
 
-        for (int repeat = 0; repeat < 5; repeat++) {
+        for (int repeat = 0; repeat < 20; repeat++) {
             const char *sync_msg = "UART_OK\r\n";
             while (*sync_msg) {
                 // Don't poll status in Renode to avoid potential deadlocks
