@@ -1,36 +1,39 @@
 # Renode Simulation Failure Analysis: RP2040 Pawn Runtime
 
-This document provides an in-depth analysis of why the Renode simulation for the RP2040-based Pawn runtime may fail or hang.
+This document provides an in-depth analysis of why the Renode simulation for the RP2040-based Pawn runtime fails or hangs in CI/CD environments.
 
-## 1. Pico SDK Initialization & Peripheral Polling
-The Raspberry Pi Pico SDK performs extensive hardware initialization before `main()` is reached. It frequently uses "busy-wait" loops that poll status registers. If these registers are not correctly mocked in the Renode `.repl` file, the firmware will hang indefinitely.
+## 1. Early CPU Halt: PC/SP Initialization Failure
+The most critical failure observed is an immediate CPU halt during the boot sequence.
 
-*   **XOSC & PLL Stability**: The SDK waits for the External Oscillator (XOSC) and Phase-Locked Loops (PLL) to become stable. It checks specific "Stable" or "Lock" bits. If these return `0`, the SDK never proceeds.
-*   **Reset Controller**: The `reset_block` function polls the `RESET_DONE` register. If this register returns `0` for a block that was just unreset, the SDK hangs.
-*   **VREG (Voltage Regulator)**: The SDK checks if the voltage regulator is "OK" (ROK bit).
+*   **Symptom**: `[ERROR] cpu: PC does not lay in memory or PC and SP are equal to zero. CPU was halted.`
+*   **Root Cause**: Renode's `CortexM` model attempts to "guess" the `VectorTableOffset` based on the loaded ELF. For RP2040 binaries, which include a 256-byte Boot Stage 2 (`.boot2`) at the start of Flash, the actual vector table starts at `0x10000100`.
+*   **Failure Mechanism**: If Renode guesses `0x10000000`, it attempts to read the initial Stack Pointer (SP) from the first 4 bytes of Flash and the Reset Handler address (PC) from the next 4 bytes. Since these contain bootloader code/data rather than a vector table, the resulting PC/SP values are invalid, causing the CPU to halt before executing a single instruction.
 
-## 2. SIO (Single-cycle IO) Block Misconfiguration
-The SIO block at `0xd0000000` is critical for RP2040 operation.
-*   **CPUID**: The SDK reads the `CPUID` register from the SIO block to determine if it is running on Core 0 or Core 1. If this register returns a value other than `0` (or `1`), core-specific initialization logic may fail.
-*   **Spinlocks**: SIO provides hardware spinlocks. If the SIO block is defined as a simple `Tag` instead of `Memory.MappedMemory`, spinlock operations (which involve reading/writing to the same address to acquire/release) will not behave as expected, leading to synchronization deadlocks in the SDK.
+## 2. Pico SDK Peripheral Polling Deadlocks
+The Raspberry Pi Pico SDK performs extensive hardware checks before reaching `main()`.
 
-## 3. USB Controller & `stdio_init_all()`
-The RP2040 has a complex USB controller. In a standard build, `stdio_init_all()` attempts to initialize both UART and USB for standard I/O.
-*   **Unmodeled USB**: Renode often lacks a full model for the RP2040 USB controller. When the SDK attempts to initialize USB, it waits for the hardware to respond. Without a proper mock or model, this results in a permanent hang before the first `printf` can even reach the UART.
-*   **Interrupts**: USB initialization often involves setting up interrupts that never fire in simulation, causing the firmware to wait for a state transition that never occurs.
+*   **Symptom**: Simulation hangs with high virtual time progression but no UART output.
+*   **Root Cause**: The SDK uses "busy-wait" loops that poll status registers for XOSC stability, PLL locks, and peripheral reset completion.
+*   **Failure Mechanism**: If the Renode `.repl` file uses simple `Tag` mocks that return `0`, the SDK gets stuck in infinite loops. For example, `xosc_init` waits for the `STABLE` bit (bit 31) of `XOSC_STATUS` (0x40024004). If this bit never becomes `1`, the firmware never proceeds to initialize the UART or the Pawn runtime.
 
-## 4. Virtual Time and Delays
-Standard delay functions like `sleep_ms` rely on the RP2040 Timer peripheral.
-*   **Timer Mocking**: If the `TIMER` peripheral is only partially mocked or not advancing, `sleep_ms` will never return.
-*   **Time Progression**: In Renode, virtual time only advances when the CPU is executing or when specifically instructed. If the CPU is stuck in a low-power state or a loop waiting for an external event that isn't modeled, the simulation may appear to hang or "drift" significantly from real-time.
+## 3. SIO (Single-cycle IO) Configuration
+The SIO block is essential for basic RP2040 operations, including determining the CPU ID and using spinlocks.
 
-## 5. REPL Syntax and Resource Mapping
-The Renode Platform Description (`.repl`) format is sensitive to syntax and ordering.
-*   **Dependency Ordering**: If the `cpu` refers to an `nvic` object that hasn't been defined yet in the file, the Renode parser may fail with an E25 or similar error.
-*   **Positional Tags**: Older or specific versions of Renode expect `Tag` definitions to use positional arguments for base address and size. Using dictionary-style initialization or incorrect sizes (not accounting for atomic register aliases at +0x1000, +0x2000, etc.) leads to unhandled access errors.
-*   **Overlapping Regions**: Defining a `Tag` that overlaps with a `Memory` region or another `Tag` is forbidden and causes the simulation to fail at startup.
+*   **Symptom**: Random crashes or synchronization failures in the SDK.
+*   **Root Cause**: Mapping SIO as a simple `Tag` does not support the expected behavior of registers like `CPUID` or the atomic nature of spinlocks.
+*   **Failure Mechanism**: If the SDK reads a non-zero value from the `CPUID` register (at `0xd0000000`), it may attempt to execute Core 1 initialization logic on Core 0, leading to unexpected state transitions and hangs.
 
-## 6. UART Synchronization in CI
-In automated environments (CI), the Renode "Terminal Tester" must synchronize with the firmware.
-*   **Buffer Bloat**: If the firmware sends too much data too quickly, or if the initial synchronization string (`UART_OK`) is missed due to slow startup, the test script will timeout.
-*   **Line Endings**: Robot Framework's `Wait For Line On Uart` is sensitive to `\r\n` vs `\n`. Inconsistent line endings in `printf` calls can cause tester failures even if the text is technically present.
+## 4. USB Controller & `stdio_init_all()`
+*   **Symptom**: Firmware hangs during `stdio_init_all()`.
+*   **Root Cause**: The RP2040 USB controller is complex and often unmodeled or only partially mocked in Renode.
+*   **Failure Mechanism**: `stdio_init_all()` attempts to initialize the USB CDC stack. Without a responsive USB controller model, the TinyUSB stack may wait indefinitely for a hardware handshake or an interrupt that never arrives in the simulated environment.
+
+## 5. UART Synchronization & Timeouts
+*   **Symptom**: `InvalidOperationException: Terminal tester failed! ... Line containing >>UART_OK<< event: failure`
+*   **Root Cause**: The mismatch between virtual time and real time in CI runners.
+*   **Failure Mechanism**: If the simulation takes too long to bypass the SDK initialization (due to slow virtual time progression), the Renode "Terminal Tester" reaches its timeout (e.g., 120s or 240s) before the firmware has a chance to write the first byte to the UART Data Register.
+
+## 6. Atomic Register Aliases
+*   **Symptom**: `Unhandled Access` errors at offsets like `+0x1000`, `+0x2000`, or `+0x3000`.
+*   **Root Cause**: RP2040 peripherals support atomic bit-set, bit-clear, and bit-xor via memory address aliasing.
+*   **Failure Mechanism**: If a peripheral `Tag` in the `.repl` file is only defined with a size of `0x1000` (4KB), any write by the SDK to the atomic alias addresses results in a Renode error, halting or corrupting the simulation.
