@@ -1,0 +1,14 @@
+14:21:32.2381 [INFO] System bus created.
+14:21:32.8561 [WARNING] Using alias 'id' for parameter 'cpuId'
+14:21:33.1646 [WARNING] Using alias 'id' for parameter 'cpuId'
+14:21:33.7496 [INFO] sysbus: Loading block of 39884 bytes length at 0x10000000.
+14:21:33.7726 [INFO] sysbus: Loading block of 2484 bytes length at 0x10009BCC.
+14:21:33.7727 [INFO] sysbus: Loading block of 67600 bytes length at 0x1000A580.
+14:21:33.7727 [INFO] sysbus: Loading block of 2048 bytes length at 0x1000A580.
+14:21:33.7727 [INFO] sysbus: Loading block of 192 bytes length at 0x20000000.
+14:21:33.7729 [INFO] sysbus: Loading block of 2048 bytes length at 0x20041000.
+14:21:33.8385 [INFO] cpu: Guessing VectorTableOffset value to be 0x10000000.
+14:21:33.8600 [ERROR] cpu: PC does not lay in memory or PC and SP are equal to zero. CPU was halted.
+14:21:33.8665 [INFO] machine-0: Machine started.
+14:21:37.7151 [INFO] machine-0: Machine paused.
+14:21:38.4012 [INFO] machine-0: Machine resumed.
