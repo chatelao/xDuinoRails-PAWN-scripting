@@ -15,12 +15,13 @@ Should Blink LED Via Pawn Script
     [Tags]                      pawn  led  blink
     Execute Command             mach create
     Execute Command             machine LoadPlatformDescription @${REPL}
+    Execute Command             sysbus LoadELF @${BIN}
     # Manually set PC and SP to ensure the CPU starts correctly despite incorrect guessing
+    # This must happen AFTER LoadELF as LoadELF resets PC/SP based on vector table guessing
     # 0x100001f7 is the _reset_handler (thumb bit set)
     # 0x20042000 is __StackTop
     Execute Command             sysbus.cpu PC 0x100001f7
     Execute Command             sysbus.cpu SP 0x20042000
-    Execute Command             sysbus LoadELF @${BIN}
     # Set log level to DEBUG
     Execute Command             logLevel 1
     Create Terminal Tester      ${UART}

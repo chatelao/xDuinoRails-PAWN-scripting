@@ -13,8 +13,8 @@ This document proposes three distinct solutions (A, B, and C) for each of the fa
 *   **Solution C (Firmware Macro):** Redefine SIO register access macros in the firmware when `is_renode` is true. Redirect reads of `CPUID` to a constant `0` and ignore spinlock operations entirely to prevent deadlocks in the emulator.
 
 ## 3. Vector Table & Entry Point Guessing
-*   **Solution A (Manual Robot Script Set):** Explicitly set the PC and SP registers in the `pawn_test.robot` file using `Execute Command sysbus.cpu PC 0x100001f7` (pointing to the reset handler) and `Execute Command sysbus.cpu SP 0x20042000` (pointing to the top of SRAM).
-*   **Solution B (Vector Table Offset Property):** Add `vectorTableOffset: 0x10000100` to the CPU definition in the `.repl` file. If the Renode version doesn't support this in the constructor, use a post-load script to set the property on the CPU object.
+*   **Solution A (Manual Robot Script Set):** Explicitly set the PC and SP registers in the `pawn_test.robot` file *after* the `LoadELF` command. Use `Execute Command sysbus.cpu PC 0x100001f7` (pointing to the reset handler) and `Execute Command sysbus.cpu SP 0x20042000` (pointing to the top of SRAM).
+*   **Solution B (Platform Script Injection):** Use a Renode script (`.resc`) that sets the CPU properties immediately after loading the platform but before starting the simulation.
 *   **Solution C (Linker Script Modification):** Update the firmware linker script to place the vector table at the very beginning of Flash (`0x10000000`) instead of following the boot2 stage. This aligns the binary with Renode's default guessing logic.
 
 ## 4. USB Controller & `stdio_init_all()`
@@ -23,7 +23,7 @@ This document proposes three distinct solutions (A, B, and C) for each of the fa
 *   **Solution C (Linker Wrapping):** Use the GCC linker's `--wrap` feature for `stdio_init_all`. Implement `__wrap_stdio_init_all` to only call `uart_init` if the environment is detected as Renode.
 
 ## 5. Virtual Time and Delays
-*   **Solution A (Busy-Wait Loop):** Implement a `safe_delay_ms` function that uses a simple `for` loop with `nop` instructions when Renode is detected. This forces virtual time to advance through CPU instruction execution instead of relying on the hardware timer.
+*   **Solution A (Busy-Wait Loop):** Implement a `safe_delay_ms` function that uses a simple `for` loop with `nop` instructions when Renode is detected. Use a modest multiplier (e.g., 100) to ensure virtual time advances without causing excessive real-time execution overhead.
 *   **Solution B (Timer Mocking):** Map the Timer peripheral (`0x40054000`) as `Memory.MappedMemory` and use a Python script in Renode to increment the "time" value at that memory location every few instructions.
 *   **Solution C (Timeout Extension):** Significantly increase the timeouts in the Robot Framework script (e.g., to 240 seconds for the initial sync) to accommodate the potentially high virtual-to-real-time ratio in cloud CI environments.
 
