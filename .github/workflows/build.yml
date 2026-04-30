@@ -22,7 +22,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs lsof
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs lsof python3-pip
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,7 +46,7 @@ jobs:
             git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git
           fi
           cd pico-sdk
-          git submodule update --init
+          git submodule update --init --recursive
 
       - name: Build Firmware
         run: |
@@ -82,6 +82,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
