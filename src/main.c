@@ -221,7 +221,7 @@ int main() {
         // Low-level UART enable and write for robust synchronization in Renode
         // This ensures the signal is sent even if stdio_uart_init hangs or fails
         volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
-        uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
+        uart0_base[11] = 0x60;  // UARTLCR_H: 8-bit, FIFO disabled
         uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
 
         // Initial delay to let Renode settle
