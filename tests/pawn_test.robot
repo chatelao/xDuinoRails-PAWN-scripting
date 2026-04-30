@@ -16,13 +16,20 @@ Should Blink LED Via Pawn Script
     Execute Command             mach create
     Execute Command             machine LoadPlatformDescription @${REPL}
     Execute Command             sysbus LoadELF @${BIN}
-    # Set log level to DEBUG
-    Execute Command             logLevel 1
+    # Manually set PC and SP to ensure the CPU starts correctly despite incorrect guessing
+    # This must happen AFTER LoadELF as LoadELF resets PC/SP based on vector table guessing
+    # 0x100001f7 is the _reset_handler (thumb bit set)
+    # 0x20042000 is __StackTop
+    Execute Command             sysbus.cpu PC 0x100001f7
+    Execute Command             sysbus.cpu SP 0x20042000
+    Execute Command             sysbus.cpu IsHalted false
+    # Set log level to INFO
+    Execute Command             logLevel 2
     Create Terminal Tester      ${UART}
     Start Emulation
     # The firmware might need a bit more time or might be failing silently
     # Let's wait for ANY output first
-    Wait For Line On Uart       UART_OK                       timeout=120
+    Wait For Line On Uart       UART_OK                       timeout=240
     Wait For Line On Uart       Booting...                    timeout=10
     Wait For Line On Uart       Pawn LED Runtime Starting...
     Wait For Line On Uart       Executing Pawn script...

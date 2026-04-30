@@ -223,11 +223,17 @@ int main() {
         volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
         uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
         uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
-        const char *sync_msg = "UART_OK\r\n";
-        while (*sync_msg) {
-            // Wait for UART to be ready to transmit (poll TXFF flag in UARTFR at offset 0x18)
-            while (uart0_base[6] & 0x20);
-            uart0_base[0] = *sync_msg++; // UARTDR
+
+        // Initial delay to let Renode settle
+        for (volatile int i = 0; i < 1000000; i++) __asm("nop");
+
+        for (int repeat = 0; repeat < 20; repeat++) {
+            const char *sync_msg = "UART_OK\r\n";
+            while (*sync_msg) {
+                // Don't poll status in Renode to avoid potential deadlocks
+                // Just write to the data register
+                uart0_base[0] = *sync_msg++; // UARTDR
+            }
         }
 
         // Initialize only UART stdio in Renode to avoid USB-related hangs
