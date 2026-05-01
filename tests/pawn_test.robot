@@ -16,15 +16,17 @@ Should Blink LED Via Pawn Script
     Execute Command             mach create
     Execute Command             machine LoadPlatformDescription @${REPL}
     Execute Command             sysbus LoadELF @${BIN}
-    # Manually set PC and SP to ensure the CPU starts correctly despite incorrect guessing
+    # Manually set VectorTableOffset, PC and SP to ensure the CPU starts correctly despite incorrect guessing
+    # 0x10000100 is where __vectors is located
+    Execute Command             sysbus.cpu VectorTableOffset 0x10000100
     # This must happen AFTER LoadELF as LoadELF resets PC/SP based on vector table guessing
     # 0x100001f7 is the _reset_handler (thumb bit set)
     # 0x20042000 is __StackTop
     Execute Command             sysbus.cpu PC 0x100001f7
     Execute Command             sysbus.cpu SP 0x20042000
     Execute Command             sysbus.cpu IsHalted false
-    # Set log level to INFO
-    Execute Command             logLevel 2
+    # Set log level to DEBUG for CI diagnostics
+    Execute Command             logLevel 1
     Create Terminal Tester      ${UART}
     Start Emulation
     # The firmware might need a bit more time or might be failing silently
