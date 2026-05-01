@@ -34,7 +34,11 @@ target_link_libraries(pawn_led pico_stdlib hardware_gpio hardware_flash hardware
 # Enable USB and UART stdio
 if (RENODE_CI)
     pico_enable_stdio_usb(pawn_led 0)
-    target_compile_definitions(pawn_led PRIVATE RENODE_CI=1)
+    target_compile_definitions(pawn_led PRIVATE
+        RENODE_CI=1
+        PICO_NO_XOSC=1
+        PICO_NO_PLL=1
+    )
 else()
     pico_enable_stdio_usb(pawn_led 1)
 endif()
