@@ -25,8 +25,8 @@ Should Blink LED Via Pawn Script
     Execute Command             sysbus.cpu PC 0x100001f7
     Execute Command             sysbus.cpu SP 0x20042000
     Execute Command             sysbus.cpu IsHalted false
-    # Set log level to INFO
-    Execute Command             logLevel 2
+    # Set log level to DEBUG for CI diagnostics
+    Execute Command             logLevel 1
     Create Terminal Tester      ${UART}
     Start Emulation
     # The firmware might need a bit more time or might be failing silently

@@ -1,0 +1,2 @@
+nvic: IRQControllers.NVIC @ sysbus 0xe000e000
+timer: Timers.RP2040_Timer @ sysbus 0x40054000
