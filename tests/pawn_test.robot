@@ -20,8 +20,10 @@ Should Blink LED Via Pawn Script
     # 0x10000100 is where __vectors is located
     Execute Command             sysbus.cpu VectorTableOffset 0x10000100
     # This must happen AFTER LoadELF as LoadELF resets PC/SP based on vector table guessing
-    # 0x100001e9 is the _entry_point (Thumb mode)
-    Execute Command             sysbus.cpu PC 0x100001e9
+    # 0x100001f7 is the _reset_handler (thumb bit set)
+    # 0x20042000 is __StackTop
+    Execute Command             sysbus.cpu PC 0x100001f7
+    Execute Command             sysbus.cpu SP 0x20042000
     Execute Command             sysbus.cpu IsHalted false
     # Set log level to DEBUG for CI diagnostics
     Execute Command             logLevel 1
