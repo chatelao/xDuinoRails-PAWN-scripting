@@ -25,8 +25,8 @@ sysbus:
         # Improved peripheral mocks for RP2040
         # Atomic aliases (SET, CLR, XOR) at +0x1000, +0x2000, +0x3000 mean size should be 0x4000
         Tag <0x40000000 0x4000> "SysInfo" 0xDEADBEEF
-        Tag <0x40004000 0x4000> "SysCfg" 0x0
-        Tag <0x40008000 0x4000> "Clocks" 0x0
+        Tag <0x40004000 0x4000> "SysCfg" 0x1
+        Tag <0x40008000 0x4000> "Clocks" 0xFFFFFFFF # CLOCKS_SELECTED bits
         Tag <0x4000c000 0x4000> "Resets" 0x01FFFFFF  # RESET_DONE bits
         Tag <0x40010000 0x4000> "PSM" 0xFFFFFFFF
         Tag <0x40014000 0x4000> "IO_BANK0" 0xFFFFFFFF
@@ -46,5 +46,5 @@ sysbus:
         Tag <0x40054000 0x4000> "TIMER" 0x0
         Tag <0x40058000 0x4000> "WATCHDOG" 0x0
         Tag <0x40060000 0x4000> "ROSC" 0x80000000
-        Tag <0x40064000 0x4000> "VREG" 0x00001000   # ROK bit
+        Tag <0x40064000 0x4000> "VREG" 0x000010b1   # ROK and ENABLED bits
         Tag <0x50110000 0x10000> "USB" 0x0           # Mock USB controller
