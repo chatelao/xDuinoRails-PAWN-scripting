@@ -225,6 +225,17 @@ int main() {
     }
 #endif
 
+    // Absolute first action: signal life to Renode
+    if (is_renode) {
+        volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
+        uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
+        uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
+        for (int i = 0; i < 100; i++) {
+            const char *msg = "UART_OK\r\n";
+            while (*msg) uart0_base[0] = *msg++;
+        }
+    }
+
     if (is_renode) {
         // Low-level UART enable and write for robust synchronization in Renode
         // This ensures the signal is sent even if stdio_uart_init hangs or fails

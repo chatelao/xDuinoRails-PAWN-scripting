@@ -9,7 +9,7 @@ nvic:
     -> cpu@0
 
 sram: Memory.MappedMemory @ sysbus 0x20000000
-    size: 0x42000
+    size: 0x44000
 
 flash: Memory.MappedMemory @ sysbus 0x10000000
     size: 0x200000
@@ -26,7 +26,10 @@ sysbus:
         # Atomic aliases (SET, CLR, XOR) at +0x1000, +0x2000, +0x3000 mean size should be 0x4000
         Tag <0x40000000 0x4000> "SysInfo" 0xDEADBEEF
         Tag <0x40004000 0x4000> "SysCfg" 0x1
-        Tag <0x40008000 0x4000> "Clocks" 0xFFFFFFFF # CLOCKS_SELECTED bits
+        # Split Clocks to provide specific values for SELECTED registers
+        Tag <0x40008000 0x8>  "Clocks_Ctrl" 0x0
+        Tag <0x40008008 0x6D> "Clocks_Selected" 0xFFFFFFFF
+        Tag <0x40008075 0x3F8B> "Clocks_Other" 0x0
         Tag <0x4000c000 0x4000> "Resets" 0x01FFFFFF  # RESET_DONE bits
         Tag <0x40010000 0x4000> "PSM" 0xFFFFFFFF
         Tag <0x40014000 0x4000> "IO_BANK0" 0xFFFFFFFF
