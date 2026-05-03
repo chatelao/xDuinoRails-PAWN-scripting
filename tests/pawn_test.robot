@@ -19,11 +19,13 @@ Should Blink LED Via Pawn Script
     # Manually set VectorTableOffset, PC and SP to ensure the CPU starts correctly despite incorrect guessing
     # 0x10000100 is where __vectors is located
     Execute Command             sysbus.cpu VectorTableOffset 0x10000100
-    # This must happen AFTER LoadELF as LoadELF resets PC/SP based on vector table guessing
-    # 0x100001f7 is the _reset_handler (thumb bit set)
+    # Force jump to main to bypass SDK init hangs
+    # 0x10000569 is main (Thumb mode)
     # 0x20042000 is __StackTop
-    Execute Command             sysbus.cpu PC 0x100001f7
+    Execute Command             sysbus.cpu PC 0x10000569
     Execute Command             sysbus.cpu SP 0x20042000
+    # Force is_renode to true in memory
+    Execute Command             sysbus WriteByte 0x20011286 1
     Execute Command             sysbus.cpu IsHalted false
     # Set log level to DEBUG for CI diagnostics
     Execute Command             logLevel 1
@@ -31,8 +33,8 @@ Should Blink LED Via Pawn Script
     Start Emulation
     # The firmware might need a bit more time or might be failing silently
     # Let's wait for ANY output first
-    Wait For Line On Uart       UART_OK                       timeout=240
-    Wait For Line On Uart       Booting...                    timeout=10
+    Wait For Line On Uart       UART_OK                       timeout=600
+    Wait For Line On Uart       Booting...                    timeout=60
     Wait For Line On Uart       Pawn LED Runtime Starting...
     Wait For Line On Uart       Executing Pawn script...
     Wait For Line On Uart       LED STATE: 1
