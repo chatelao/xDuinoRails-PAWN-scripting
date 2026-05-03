@@ -22,7 +22,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs lsof python3-pip
+          sudo apt-get install -y gcc-arm-none-eabi cmake nodejs lsof python3-pip python3-psutil python3-yaml
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,6 +54,10 @@ jobs:
           cd build
           cmake ../src -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk -DRENODE_CI=ON
           make
+
+      - name: Install Robot Framework
+        run: |
+          pip3 install robotframework==6.1
 
       - name: Setup Renode
         uses: antmicro/renode-test-action@v4

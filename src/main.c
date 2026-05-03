@@ -216,7 +216,15 @@ void dummy_on_direction_change(AMX *amx) {
 }
 
 int main() {
-    detect_renode();
+#ifdef RENODE_CI
+    is_renode = true;
+#else
+    // Early runtime detection of Renode
+    if (*((volatile uint32_t *)0x40000000) == 0xDEADBEEF) {
+        is_renode = true;
+    }
+#endif
+
     if (is_renode) {
         // Low-level UART enable and write for robust synchronization in Renode
         // This ensures the signal is sent even if stdio_uart_init hangs or fails
