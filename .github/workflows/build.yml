@@ -76,31 +76,13 @@ jobs:
           name: pawn_led_uf2
           path: build/pawn_led.uf2
 
-  deploy-web:
+  test-frontend:
     runs-on: ubuntu-latest
-    needs: build-firmware
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lsof
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'web'
-
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -128,7 +110,10 @@ jobs:
         run: npx playwright install-deps chromium
 
       - name: Ensure Port 8080 is clear
-        run: kill $(lsof -t -i :8080) 2>/dev/null || true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof
+          kill $(lsof -t -i :8080) 2>/dev/null || true
 
       - name: Run Playwright tests
         run: npx playwright test
@@ -140,6 +125,25 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  deploy-web:
+    runs-on: ubuntu-latest
+    needs: [build-firmware, test-frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'web'
 
       - name: Deploy to GitHub Pages
         id: deployment

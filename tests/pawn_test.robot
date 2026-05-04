@@ -16,16 +16,18 @@ Should Blink LED Via Pawn Script
     Execute Command             mach create
     Execute Command             machine LoadPlatformDescription @${REPL}
     Execute Command             sysbus LoadELF @${BIN}
+    ${VECTORS}=                 Execute Command             sysbus GetSymbolAddress "__vectors"
+    ${MAIN}=                    Execute Command             sysbus GetSymbolAddress "main"
+    ${STACK}=                   Execute Command             sysbus GetSymbolAddress "__StackTop"
+    ${IS_RENODE_ADDR}=          Execute Command             sysbus GetSymbolAddress "is_renode"
+
     # Manually set VectorTableOffset, PC and SP to ensure the CPU starts correctly despite incorrect guessing
-    # 0x10000100 is where __vectors is located
-    Execute Command             sysbus.cpu VectorTableOffset 0x10000100
+    Execute Command             sysbus.cpu VectorTableOffset ${VECTORS}
     # Force jump to main to bypass SDK init hangs
-    # 0x10000569 is main (Thumb mode)
-    # 0x20042000 is __StackTop
-    Execute Command             sysbus.cpu PC 0x10000569
-    Execute Command             sysbus.cpu SP 0x20042000
+    Execute Command             sysbus.cpu PC ${MAIN}
+    Execute Command             sysbus.cpu SP ${STACK}
     # Force is_renode to true in memory
-    Execute Command             sysbus WriteByte 0x20011286 1
+    Execute Command             sysbus WriteByte ${IS_RENODE_ADDR} 1
     Execute Command             sysbus.cpu IsHalted false
     # Set log level to DEBUG for CI diagnostics
     Execute Command             logLevel 1
