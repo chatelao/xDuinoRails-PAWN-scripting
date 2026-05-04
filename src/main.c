@@ -216,54 +216,39 @@ void dummy_on_direction_change(AMX *amx) {
 }
 
 int main() {
+    // Determine if we are running in Renode
 #ifdef RENODE_CI
     is_renode = true;
 #else
-    // Early runtime detection of Renode
     if (*((volatile uint32_t *)0x40000000) == 0xDEADBEEF) {
         is_renode = true;
     }
 #endif
 
-    // Absolute first action: signal life to Renode
     if (is_renode) {
-        volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
-        uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
-        uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
-        for (int i = 0; i < 100; i++) {
-            const char *msg = "UART_OK\r\n";
-            while (*msg) uart0_base[0] = *msg++;
-        }
-    }
-
-    if (is_renode) {
-        // Low-level UART enable and write for robust synchronization in Renode
-        // This ensures the signal is sent even if stdio_uart_init hangs or fails
+        // Robust Renode synchronization:
+        // Initialize UART0 directly before SDK clocks/resets to avoid hangs.
         volatile uint32_t *uart0_base = (volatile uint32_t *)0x40034000;
         uart0_base[11] = 0x70;  // UARTLCR_H: 8-bit, FIFO enabled
         uart0_base[12] = 0x301; // UARTCR: TXE, RXE, UARTEN
 
-        // Initial delay to let Renode settle
-        for (volatile int i = 0; i < 100000; i++) __asm("nop");
+        // Initial delay to let Renode settle and Terminal Tester connect
+        for (volatile int i = 0; i < 1000000; i++) __asm("nop");
 
-        for (int repeat = 0; repeat < 50; repeat++) {
+        for (int repeat = 0; repeat < 20; repeat++) {
             const char *sync_msg = "UART_OK\r\n";
             while (*sync_msg) {
-                // Don't poll status in Renode to avoid potential deadlocks
-                // Just write to the data register
                 uart0_base[0] = *sync_msg++; // UARTDR
             }
         }
 
-        // Initialize only UART stdio in Renode to avoid USB-related hangs
         stdio_uart_init();
-        printf("Booting...\r\n");
-        fflush(stdout);
     } else {
         stdio_init_all();
-        printf("Booting...\r\n");
-        fflush(stdout);
     }
+
+    printf("Booting...\r\n");
+    fflush(stdout);
     if (is_renode) {
         srand(42); // Fixed seed for Renode
     } else {
